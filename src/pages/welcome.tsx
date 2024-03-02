@@ -3,6 +3,7 @@ import { Card } from "../components";
 import { useApolloClient, useSuspenseQuery } from "@apollo/client";
 import { graphql } from "../gql";
 import { redirect } from "react-router-dom";
+import routes from "../routes";
 
 export function Welcome() {
   const apolloClient = useApolloClient();
@@ -19,6 +20,7 @@ export function Welcome() {
       profession: "",
     },
     onSubmit(values) {
+      console.log(values);
       apolloClient
         .mutate({
           mutation: graphql(
@@ -37,7 +39,7 @@ export function Welcome() {
           variables: {
             input: {
               ...values,
-              returnTo: "/welcome",
+              returnTo: routes.profile,
             },
           },
         })
@@ -63,7 +65,8 @@ export function Welcome() {
   );
 
   if (data.customer) {
-    return redirect("/profile");
+    redirect("/profile");
+    return null;
   }
 
   return (
@@ -108,111 +111,111 @@ export function Welcome() {
               <div>
                 <input
                   type="radio"
-                  id="Product Designer"
-                  name="professsion"
+                  id="productDesigner"
+                  name="profession"
                   value="Product Designer"
                   required
                 />
-                <label htmlFor="Product Designer">Product Designer</label>
+                <label htmlFor="productDesigner">Product Designer</label>
               </div>
               <div>
                 <input
                   type="radio"
-                  id="Graphic Designer"
-                  name="professsion"
+                  id="graphicDesigner"
+                  name="profession"
                   value="Graphic Designer"
                 />
-                <label htmlFor="Graphic Designer">Graphic Designer</label>
+                <label htmlFor="graphicDesigner">Graphic Designer</label>
               </div>
               <div>
                 <input
                   type="radio"
-                  id="Brand Designer"
-                  name="professsion"
+                  id="brandDesigner"
+                  name="profession"
                   value="Brand Designer"
                 />
-                <label htmlFor="Brand Designer">Brand Designer</label>
+                <label htmlFor="brandDesigner">Brand Designer</label>
               </div>
               <div>
                 <input
                   type="radio"
-                  id="Web Designer"
-                  name="professsion"
+                  id="webDesigner"
+                  name="profession"
                   value="Web Designer"
                 />
-                <label htmlFor="Web Designer">Web Designer</label>
+                <label htmlFor="webDesigner">Web Designer</label>
               </div>
               <div>
                 <input
                   type="radio"
-                  id="Art Director"
-                  name="professsion"
+                  id="artDirector"
+                  name="profession"
                   value="Art Director"
                 />
-                <label htmlFor="Art Director">Art Director</label>
+                <label htmlFor="artDirector">Art Director</label>
               </div>
               <div>
                 <input
                   type="radio"
-                  id="Illustrator"
-                  name="professsion"
+                  id="illustrator"
+                  name="profession"
                   value="Illustrator"
                 />
-                <label htmlFor="Illustrator">Illustrator</label>
+                <label htmlFor="illustrator">Illustrator</label>
               </div>
               <div>
                 <input
                   type="radio"
-                  id="Motion Designer"
-                  name="professsion"
+                  id="motionDesigner"
+                  name="profession"
                   value="Motion Designer"
                 />
-                <label htmlFor="Motion Designer">Motion Designer</label>
+                <label htmlFor="motionDesigner">Motion Designer</label>
               </div>
               <div>
                 <input
                   type="radio"
-                  id="Content Designer"
-                  name="professsion"
+                  id="contentDesigner"
+                  name="profession"
                   value="Content Designer"
                 />
-                <label htmlFor="Content Designer">Content Designer</label>
+                <label htmlFor="contentDesigner">Content Designer</label>
               </div>
               <div>
                 <input
                   type="radio"
-                  id="Copywriter"
-                  name="professsion"
+                  id="copywriter"
+                  name="profession"
                   value="Copywriter"
                 />
-                <label htmlFor="Copywriter">Copywriter</label>
+                <label htmlFor="copywriter">Copywriter</label>
               </div>
               <div>
                 <input
                   type="radio"
-                  id="Engineer"
-                  name="professsion"
+                  id="engineer"
+                  name="profession"
                   value="Engineer"
                 />
-                <label htmlFor="Engineer">Engineer</label>
+                <label htmlFor="engineer">Engineer</label>
               </div>
               <div>
                 <input
                   type="radio"
-                  id="Product Manager"
-                  name="professsion"
+                  id="productManager"
+                  name="profession"
                   value="Product Manager"
                 />
-                <label htmlFor="Product Manager">Product Manager</label>
+                <label htmlFor="productManager">Product Manager</label>
               </div>
               <div>
                 <input
                   type="radio"
-                  id="Other"
-                  name="professsion"
+                  id="other"
+                  name="profession"
                   value="Other"
                 />
-                <label htmlFor="Other">Other</label>
+                <label htmlFor="other">Other</label>
               </div>
             </fieldset>
             <button className="ml-auto" type="submit">

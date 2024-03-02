@@ -6,6 +6,7 @@ import "./index.css";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Verify } from "./pages/verify.tsx";
 import { Profile } from "./pages/profile.tsx";
+import routes from "./routes.ts";
 
 const router = createBrowserRouter([
   {
@@ -13,15 +14,15 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       {
-        path: "welcome",
+        path: routes.welcome,
         element: <Welcome />,
       },
       {
-        path: "verify",
+        path: routes.verify,
         element: <Verify />,
       },
       {
-        path: "profile",
+        path: routes.profile,
         element: <Profile />,
       },
     ],
