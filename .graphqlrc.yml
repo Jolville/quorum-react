@@ -1,0 +1,13 @@
+schema: http://localhost:8080/query
+documents: ["src/**/*.tsx", "src/**/*.ts", "!src/graphql/types.tsx"]
+extensions:
+  codegen:
+    generates:
+      src/gql/:
+        preset: client
+        config:
+          enumsAsTypes: true
+          useImplementingTypes: true
+          scalars:
+            Time: string
+            UUID: string

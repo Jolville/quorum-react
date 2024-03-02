@@ -1,9 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App.tsx";
+import App from "./app.tsx";
 import { Welcome } from "./pages/welcome";
 import "./index.css";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import { Verify } from "./pages/verify.tsx";
+import { Profile } from "./pages/profile.tsx";
 
 const router = createBrowserRouter([
   {
@@ -13,6 +15,14 @@ const router = createBrowserRouter([
       {
         path: "welcome",
         element: <Welcome />,
+      },
+      {
+        path: "verify",
+        element: <Verify />,
+      },
+      {
+        path: "profile",
+        element: <Profile />,
       },
     ],
   },
