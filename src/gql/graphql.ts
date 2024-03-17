@@ -16,6 +16,13 @@ export type Scalars = {
   Float: { input: number; output: number; }
   Time: { input: string; output: string; }
   UUID: { input: string; output: string; }
+  Upload: { input: any; output: any; }
+};
+
+export type AuthorUnknownError = BaseError & {
+  __typename?: 'AuthorUnknownError';
+  message: Scalars['String']['output'];
+  path?: Maybe<Array<Scalars['String']['output']>>;
 };
 
 export type BaseError = {
@@ -23,13 +30,37 @@ export type BaseError = {
   path?: Maybe<Array<Scalars['String']['output']>>;
 };
 
+export type CreatePostError = AuthorUnknownError | ErrPostNotOwned | LiveAtAlreadyPassedError | NotOpenForLongEnoughError | TooFewOptionsError | TooManyOptionsError;
+
+export type CreatePostInput = {
+  category?: InputMaybe<PostCategory>;
+  closesAt?: InputMaybe<Scalars['Time']['input']>;
+  context?: InputMaybe<Scalars['String']['input']>;
+  designPhase?: InputMaybe<DesignPhase>;
+  id: Scalars['UUID']['input'];
+  liveAt?: InputMaybe<Scalars['Time']['input']>;
+  options: Array<CreatePostOptionInput>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+export type CreatePostOptionInput = {
+  file: Scalars['Upload']['input'];
+  position: Scalars['Int']['input'];
+};
+
+export type CreatePostPayload = {
+  __typename?: 'CreatePostPayload';
+  errors: Array<CreatePostError>;
+  post?: Maybe<Post>;
+};
+
 export type Customer = {
   __typename?: 'Customer';
   email: Scalars['String']['output'];
-  firstName: Scalars['String']['output'];
+  firstName?: Maybe<Scalars['String']['output']>;
   id: Scalars['UUID']['output'];
-  lastName: Scalars['String']['output'];
-  profession: Scalars['String']['output'];
+  lastName?: Maybe<Scalars['String']['output']>;
+  profession?: Maybe<Scalars['String']['output']>;
 };
 
 export type CustomerNotFoundError = BaseError & {
@@ -38,8 +69,13 @@ export type CustomerNotFoundError = BaseError & {
   path?: Maybe<Array<Scalars['String']['output']>>;
 };
 
-export type EmailTakenError = BaseError & {
-  __typename?: 'EmailTakenError';
+export type DesignPhase =
+  | 'HI_FI'
+  | 'LO_FI'
+  | 'WIREFRAME';
+
+export type ErrPostNotOwned = BaseError & {
+  __typename?: 'ErrPostNotOwned';
   message: Scalars['String']['output'];
   path?: Maybe<Array<Scalars['String']['output']>>;
 };
@@ -74,11 +110,23 @@ export type LinkExpiredError = BaseError & {
   path?: Maybe<Array<Scalars['String']['output']>>;
 };
 
+export type LiveAtAlreadyPassedError = BaseError & {
+  __typename?: 'LiveAtAlreadyPassedError';
+  message: Scalars['String']['output'];
+  path?: Maybe<Array<Scalars['String']['output']>>;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
+  createPost: CreatePostPayload;
   getLoginLink: GetLoginLinkPayload;
   signUp: SignUpPayload;
   verifyCustomerToken: VerifyCustomerTokenPayload;
+};
+
+
+export type MutationCreatePostArgs = {
+  input: CreatePostInput;
 };
 
 
@@ -96,12 +144,56 @@ export type MutationVerifyCustomerTokenArgs = {
   input: VerifyCustomerTokenInput;
 };
 
+export type NotOpenForLongEnoughError = BaseError & {
+  __typename?: 'NotOpenForLongEnoughError';
+  message: Scalars['String']['output'];
+  path?: Maybe<Array<Scalars['String']['output']>>;
+};
+
+export type Post = {
+  __typename?: 'Post';
+  author?: Maybe<Customer>;
+  category?: Maybe<PostCategory>;
+  closesAt?: Maybe<Scalars['Time']['output']>;
+  context?: Maybe<Scalars['String']['output']>;
+  designPhase?: Maybe<DesignPhase>;
+  id: Scalars['UUID']['output'];
+  liveAt?: Maybe<Scalars['Time']['output']>;
+  options?: Maybe<Array<PostOption>>;
+  tags?: Maybe<Array<Scalars['String']['output']>>;
+  votes?: Maybe<Array<PostVote>>;
+};
+
+export type PostCategory =
+  | 'PRODUCT_DESIGN';
+
+export type PostOption = {
+  __typename?: 'PostOption';
+  id: Scalars['UUID']['output'];
+  position: Scalars['Int']['output'];
+  url?: Maybe<Scalars['String']['output']>;
+};
+
+export type PostVote = {
+  __typename?: 'PostVote';
+  id: Scalars['UUID']['output'];
+  post?: Maybe<Post>;
+  reason?: Maybe<Scalars['String']['output']>;
+  voter?: Maybe<Customer>;
+};
+
 export type Query = {
   __typename?: 'Query';
   customer?: Maybe<Customer>;
+  post?: Maybe<Post>;
 };
 
-export type SignUpError = EmailTakenError | InvalidEmailError | InvalidReturnToError;
+
+export type QueryPostArgs = {
+  id: Scalars['UUID']['input'];
+};
+
+export type SignUpError = InvalidEmailError | InvalidReturnToError;
 
 export type SignUpInput = {
   email: Scalars['String']['input'];
@@ -114,6 +206,18 @@ export type SignUpInput = {
 export type SignUpPayload = {
   __typename?: 'SignUpPayload';
   errors: Array<SignUpError>;
+};
+
+export type TooFewOptionsError = BaseError & {
+  __typename?: 'TooFewOptionsError';
+  message: Scalars['String']['output'];
+  path?: Maybe<Array<Scalars['String']['output']>>;
+};
+
+export type TooManyOptionsError = BaseError & {
+  __typename?: 'TooManyOptionsError';
+  message: Scalars['String']['output'];
+  path?: Maybe<Array<Scalars['String']['output']>>;
 };
 
 export type VerifyCustomerTokenError = LinkExpiredError;
@@ -132,7 +236,7 @@ export type VerifyCustomerTokenPayload = {
 export type ProfilePageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type ProfilePageQuery = { __typename?: 'Query', customer?: { __typename?: 'Customer', id: string, firstName: string } | null };
+export type ProfilePageQuery = { __typename?: 'Query', customer?: { __typename?: 'Customer', id: string, firstName?: string | null } | null };
 
 export type VerifyCustomerTokenMutationVariables = Exact<{
   input: VerifyCustomerTokenInput;
@@ -146,7 +250,7 @@ export type SignUpMutationVariables = Exact<{
 }>;
 
 
-export type SignUpMutation = { __typename?: 'Mutation', signUp: { __typename?: 'SignUpPayload', errors: Array<{ __typename?: 'EmailTakenError', message: string } | { __typename?: 'InvalidEmailError', message: string } | { __typename?: 'InvalidReturnToError', message: string }> } };
+export type SignUpMutation = { __typename?: 'Mutation', signUp: { __typename?: 'SignUpPayload', errors: Array<{ __typename?: 'InvalidEmailError', message: string } | { __typename?: 'InvalidReturnToError', message: string }> } };
 
 export type WelcomePageQueryVariables = Exact<{ [key: string]: never; }>;
 
