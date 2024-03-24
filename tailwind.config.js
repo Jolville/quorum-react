@@ -24,11 +24,11 @@ export default {
         "mh-s": ["24px", "1.2em"],
         "mh-xs": ["20px", "1.2em"],
         // Paragraph
-        "p-xl": ["20px, 1.2em"],
-        "p-l": ["18px, 1.2em"],
-        "p-m": ["16px, 1.2em"],
-        "p-sm": ["14px, 1.2em"],
-        "p-xs": ["12px, 1.2em"],
+        "p-xl": ["20px", "1.2em"],
+        "p-l": ["18px", "1.2em"],
+        "p-m": ["16px", "1.2em"],
+        "p-sm": ["14px", "1.2em"],
+        "p-xs": ["12px", "1.2em"],
       },
       colors: {
         transparent: "transparent",

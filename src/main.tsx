@@ -3,7 +3,11 @@ import ReactDOM from "react-dom/client";
 import App from "./app.tsx";
 import { Welcome } from "./pages/welcome";
 import "./index.css";
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import {
+  RouterProvider,
+  createBrowserRouter,
+  redirectDocument,
+} from "react-router-dom";
 import { Verify } from "./pages/verify.tsx";
 import { Profile } from "./pages/profile.tsx";
 import routes from "./routes.ts";
@@ -14,6 +18,13 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />,
     children: [
+      {
+        path: "/",
+        element: <></>,
+        loader() {
+          return redirectDocument(routes.welcome);
+        },
+      },
       {
         path: routes.welcome,
         element: <Welcome />,
