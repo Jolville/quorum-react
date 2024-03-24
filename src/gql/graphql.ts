@@ -30,28 +30,10 @@ export type BaseError = {
   path?: Maybe<Array<Scalars['String']['output']>>;
 };
 
-export type CreatePostError = AuthorUnknownError | ErrPostNotOwned | LiveAtAlreadyPassedError | NotOpenForLongEnoughError | TooFewOptionsError | TooManyOptionsError;
-
-export type CreatePostInput = {
-  category?: InputMaybe<PostCategory>;
-  closesAt?: InputMaybe<Scalars['Time']['input']>;
-  context?: InputMaybe<Scalars['String']['input']>;
-  designPhase?: InputMaybe<DesignPhase>;
-  id: Scalars['UUID']['input'];
-  liveAt?: InputMaybe<Scalars['Time']['input']>;
-  options: Array<CreatePostOptionInput>;
-  tags?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
-export type CreatePostOptionInput = {
-  file: Scalars['Upload']['input'];
-  position: Scalars['Int']['input'];
-};
-
-export type CreatePostPayload = {
-  __typename?: 'CreatePostPayload';
-  errors: Array<CreatePostError>;
-  post?: Maybe<Post>;
+export type ClosesAtNotAfterOpensAtError = BaseError & {
+  __typename?: 'ClosesAtNotAfterOpensAtError';
+  message: Scalars['String']['output'];
+  path?: Maybe<Array<Scalars['String']['output']>>;
 };
 
 export type Customer = {
@@ -76,6 +58,12 @@ export type DesignPhase =
 
 export type ErrPostNotOwned = BaseError & {
   __typename?: 'ErrPostNotOwned';
+  message: Scalars['String']['output'];
+  path?: Maybe<Array<Scalars['String']['output']>>;
+};
+
+export type FileTooLargeError = BaseError & {
+  __typename?: 'FileTooLargeError';
   message: Scalars['String']['output'];
   path?: Maybe<Array<Scalars['String']['output']>>;
 };
@@ -110,23 +98,12 @@ export type LinkExpiredError = BaseError & {
   path?: Maybe<Array<Scalars['String']['output']>>;
 };
 
-export type LiveAtAlreadyPassedError = BaseError & {
-  __typename?: 'LiveAtAlreadyPassedError';
-  message: Scalars['String']['output'];
-  path?: Maybe<Array<Scalars['String']['output']>>;
-};
-
 export type Mutation = {
   __typename?: 'Mutation';
-  createPost: CreatePostPayload;
   getLoginLink: GetLoginLinkPayload;
   signUp: SignUpPayload;
+  upsertPost: UpsertPostPayload;
   verifyCustomerToken: VerifyCustomerTokenPayload;
-};
-
-
-export type MutationCreatePostArgs = {
-  input: CreatePostInput;
 };
 
 
@@ -140,12 +117,17 @@ export type MutationSignUpArgs = {
 };
 
 
+export type MutationUpsertPostArgs = {
+  input: UpsertPostInput;
+};
+
+
 export type MutationVerifyCustomerTokenArgs = {
   input: VerifyCustomerTokenInput;
 };
 
-export type NotOpenForLongEnoughError = BaseError & {
-  __typename?: 'NotOpenForLongEnoughError';
+export type OpensAtAlreadyPassedError = BaseError & {
+  __typename?: 'OpensAtAlreadyPassedError';
   message: Scalars['String']['output'];
   path?: Maybe<Array<Scalars['String']['output']>>;
 };
@@ -156,16 +138,24 @@ export type Post = {
   category?: Maybe<PostCategory>;
   closesAt?: Maybe<Scalars['Time']['output']>;
   context?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['Time']['output'];
   designPhase?: Maybe<DesignPhase>;
   id: Scalars['UUID']['output'];
-  liveAt?: Maybe<Scalars['Time']['output']>;
+  opensAt?: Maybe<Scalars['Time']['output']>;
   options?: Maybe<Array<PostOption>>;
-  tags?: Maybe<Array<Scalars['String']['output']>>;
+  status: PostStatus;
+  updatedAt: Scalars['Time']['output'];
   votes?: Maybe<Array<PostVote>>;
 };
 
 export type PostCategory =
-  | 'PRODUCT_DESIGN';
+  | 'ANIMATION'
+  | 'BRANDING'
+  | 'ILLUSTRATION'
+  | 'PRINT'
+  | 'PRODUCT'
+  | 'TYPOGRAPHY'
+  | 'WEB';
 
 export type PostOption = {
   __typename?: 'PostOption';
@@ -173,6 +163,11 @@ export type PostOption = {
   position: Scalars['Int']['output'];
   url?: Maybe<Scalars['String']['output']>;
 };
+
+export type PostStatus =
+  | 'CLOSED'
+  | 'DRAFT'
+  | 'LIVE';
 
 export type PostVote = {
   __typename?: 'PostVote';
@@ -220,6 +215,36 @@ export type TooManyOptionsError = BaseError & {
   path?: Maybe<Array<Scalars['String']['output']>>;
 };
 
+export type UnsupportedFileTypeError = BaseError & {
+  __typename?: 'UnsupportedFileTypeError';
+  message: Scalars['String']['output'];
+  path?: Maybe<Array<Scalars['String']['output']>>;
+};
+
+export type UpsertPostError = AuthorUnknownError | ClosesAtNotAfterOpensAtError | ErrPostNotOwned | FileTooLargeError | OpensAtAlreadyPassedError | TooFewOptionsError | TooManyOptionsError | UnsupportedFileTypeError;
+
+export type UpsertPostInput = {
+  category?: InputMaybe<PostCategory>;
+  closesAt?: InputMaybe<Scalars['Time']['input']>;
+  context?: InputMaybe<Scalars['String']['input']>;
+  designPhase?: InputMaybe<DesignPhase>;
+  id: Scalars['UUID']['input'];
+  opensAt?: InputMaybe<Scalars['Time']['input']>;
+  options: Array<UpsertPostOptionInput>;
+};
+
+export type UpsertPostOptionInput = {
+  file?: InputMaybe<Scalars['Upload']['input']>;
+  id: Scalars['UUID']['input'];
+  position: Scalars['Int']['input'];
+};
+
+export type UpsertPostPayload = {
+  __typename?: 'UpsertPostPayload';
+  errors: Array<UpsertPostError>;
+  post?: Maybe<Post>;
+};
+
 export type VerifyCustomerTokenError = LinkExpiredError;
 
 export type VerifyCustomerTokenInput = {
@@ -232,6 +257,13 @@ export type VerifyCustomerTokenPayload = {
   errors: Array<VerifyCustomerTokenError>;
   newToken?: Maybe<Scalars['ID']['output']>;
 };
+
+export type PostPageQueryVariables = Exact<{
+  postId: Scalars['UUID']['input'];
+}>;
+
+
+export type PostPageQuery = { __typename?: 'Query', post?: { __typename?: 'Post', id: string } | null };
 
 export type ProfilePageQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -258,6 +290,7 @@ export type WelcomePageQueryVariables = Exact<{ [key: string]: never; }>;
 export type WelcomePageQuery = { __typename?: 'Query', customer?: { __typename?: 'Customer', id: string } | null };
 
 
+export const PostPageDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PostPage"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"postId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"post"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"postId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<PostPageQuery, PostPageQueryVariables>;
 export const ProfilePageDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ProfilePage"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"customer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firstName"}}]}}]}}]} as unknown as DocumentNode<ProfilePageQuery, ProfilePageQueryVariables>;
 export const VerifyCustomerTokenDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"VerifyCustomerToken"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"VerifyCustomerTokenInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"verifyCustomerToken"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"customer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"newToken"}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"BaseError"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]}}]} as unknown as DocumentNode<VerifyCustomerTokenMutation, VerifyCustomerTokenMutationVariables>;
 export const SignUpDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SignUp"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"SignUpInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"signUp"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"BaseError"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]}}]} as unknown as DocumentNode<SignUpMutation, SignUpMutationVariables>;

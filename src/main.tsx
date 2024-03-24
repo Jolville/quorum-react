@@ -7,6 +7,7 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Verify } from "./pages/verify.tsx";
 import { Profile } from "./pages/profile.tsx";
 import routes from "./routes.ts";
+import { Post } from "./pages/post.tsx";
 
 const router = createBrowserRouter([
   {
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
       {
         path: routes.profile,
         element: <Profile />,
+      },
+      {
+        path: routes.post.path,
+        element: <Post />,
       },
     ],
   },

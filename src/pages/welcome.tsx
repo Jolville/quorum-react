@@ -1,5 +1,5 @@
 import { useFormik } from "formik";
-import { Card } from "../components";
+import { Card, Typography } from "../components";
 import { useApolloClient, useSuspenseQuery } from "@apollo/client";
 import { graphql } from "../gql";
 import { redirect } from "react-router-dom";
@@ -73,11 +73,18 @@ export function Welcome() {
     <div className="h-full w-full flex justify-center items-center">
       <Card>
         <div className="m-4 flex flex-col">
-          <h1 className="font-bold text-lg">Welcome!</h1>
-          <p>
+          <Typography
+            element="h"
+            size="s"
+            style="bold"
+            className="text-gray-900"
+          >
+            Welcome!
+          </Typography>
+          <Typography element="p" size="m" className="text-gray-500">
             Let&apos;s build your profile so we can provide the best start for
             you.
-          </p>
+          </Typography>
           <form onSubmit={formik.handleSubmit} className="flex flex-col w-full">
             <label htmlFor="firstName">First Name</label>
             <input
