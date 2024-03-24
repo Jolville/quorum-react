@@ -6,7 +6,7 @@ import "./index.css";
 import {
   RouterProvider,
   createBrowserRouter,
-  redirectDocument,
+  redirect,
 } from "react-router-dom";
 import { Verify } from "./pages/verify.tsx";
 import { Profile } from "./pages/profile.tsx";
@@ -22,7 +22,7 @@ const router = createBrowserRouter([
         path: "/",
         element: <></>,
         loader() {
-          return redirectDocument(routes.welcome);
+          return redirect(routes.welcome);
         },
       },
       {
