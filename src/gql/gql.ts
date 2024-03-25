@@ -16,8 +16,8 @@ const documents = {
     "\n      query PostPage($postId: UUID!) {\n        post(id: $postId) {\n          id\n        }\n      }\n    ": types.PostPageDocument,
     "\n      query ProfilePage {\n        customer {\n          id\n          firstName\n        }\n      }\n    ": types.ProfilePageDocument,
     "\n            mutation VerifyCustomerToken($input: VerifyCustomerTokenInput!) {\n              verifyCustomerToken(input: $input) {\n                customer {\n                  id\n                }\n                newToken\n                errors {\n                  ... on BaseError {\n                    message\n                  }\n                }\n              }\n            }\n          ": types.VerifyCustomerTokenDocument,
-    "\n              mutation SignUp($input: SignUpInput!) {\n                signUp(input: $input) {\n                  errors {\n                    ... on BaseError {\n                      message\n                    }\n                  }\n                }\n              }\n            ": types.SignUpDocument,
     "\n      query WelcomePage {\n        customer {\n          id\n        }\n      }\n    ": types.WelcomePageDocument,
+    "\n                      mutation SignUp($input: SignUpInput!) {\n                        signUp(input: $input) {\n                          errors {\n                            ... on BaseError {\n                              message\n                            }\n                          }\n                        }\n                      }\n                    ": types.SignUpDocument,
 };
 
 /**
@@ -49,11 +49,11 @@ export function graphql(source: "\n            mutation VerifyCustomerToken($inp
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n              mutation SignUp($input: SignUpInput!) {\n                signUp(input: $input) {\n                  errors {\n                    ... on BaseError {\n                      message\n                    }\n                  }\n                }\n              }\n            "): (typeof documents)["\n              mutation SignUp($input: SignUpInput!) {\n                signUp(input: $input) {\n                  errors {\n                    ... on BaseError {\n                      message\n                    }\n                  }\n                }\n              }\n            "];
+export function graphql(source: "\n      query WelcomePage {\n        customer {\n          id\n        }\n      }\n    "): (typeof documents)["\n      query WelcomePage {\n        customer {\n          id\n        }\n      }\n    "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n      query WelcomePage {\n        customer {\n          id\n        }\n      }\n    "): (typeof documents)["\n      query WelcomePage {\n        customer {\n          id\n        }\n      }\n    "];
+export function graphql(source: "\n                      mutation SignUp($input: SignUpInput!) {\n                        signUp(input: $input) {\n                          errors {\n                            ... on BaseError {\n                              message\n                            }\n                          }\n                        }\n                      }\n                    "): (typeof documents)["\n                      mutation SignUp($input: SignUpInput!) {\n                        signUp(input: $input) {\n                          errors {\n                            ... on BaseError {\n                              message\n                            }\n                          }\n                        }\n                      }\n                    "];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

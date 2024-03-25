@@ -1,5 +1,5 @@
-import { useFormik } from "formik";
-import { Card, Typography } from "../components";
+import { useForm } from "react-hook-form";
+import { Card, TextInput, Typography } from "../components";
 import { useApolloClient, useSuspenseQuery } from "@apollo/client";
 import { graphql } from "../gql";
 import { redirect } from "react-router-dom";
@@ -7,51 +7,13 @@ import routes from "../routes";
 
 export function Welcome() {
   const apolloClient = useApolloClient();
-  const formik = useFormik<{
+  const { register, handleSubmit, formState } = useForm<{
     firstName: string;
     lastName: string;
     email: string;
     profession: string;
   }>({
-    initialValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      profession: "",
-    },
-    onSubmit(values) {
-      console.log(values);
-      apolloClient
-        .mutate({
-          mutation: graphql(
-            `
-              mutation SignUp($input: SignUpInput!) {
-                signUp(input: $input) {
-                  errors {
-                    ... on BaseError {
-                      message
-                    }
-                  }
-                }
-              }
-            `
-          ),
-          variables: {
-            input: {
-              ...values,
-              returnTo: routes.profile,
-            },
-          },
-        })
-        .then(({ data }) => {
-          let message = "Check log in link";
-          if (data?.signUp.errors.length) {
-            message =
-              "Error: " + data.signUp.errors.map((e) => e.message).join(", ");
-          }
-          alert(message);
-        });
-    },
+    mode: "onBlur",
   });
 
   const { data } = useSuspenseQuery(
@@ -77,41 +39,76 @@ export function Welcome() {
             element="h"
             size="s"
             style="bold"
-            className="text-gray-900"
+            className="text-gray-900 mb-3"
           >
             Welcome!
           </Typography>
-          <Typography element="p" size="m" className="text-gray-500">
+          <Typography element="p" size="m" className="text-gray-500 mb-4">
             Let&apos;s build your profile so we can provide the best start for
             you.
           </Typography>
-          <form onSubmit={formik.handleSubmit} className="flex flex-col w-full">
-            <label htmlFor="firstName">First Name</label>
-            <input
-              id="firstName"
-              name="firstName"
-              type="text"
-              onChange={formik.handleChange}
-              value={formik.values.firstName}
-              required
-            />
-            <label htmlFor="lastName">Last Name</label>
-            <input
-              id="lastName"
-              name="lastName"
-              type="text"
-              onChange={formik.handleChange}
-              value={formik.values.lastName}
-              required
-            />
-            <label htmlFor="email">Email Address</label>
-            <input
-              id="email"
-              name="email"
+          <form
+            onSubmit={handleSubmit((values) => {
+              console.log(values);
+              apolloClient
+                .mutate({
+                  mutation: graphql(
+                    `
+                      mutation SignUp($input: SignUpInput!) {
+                        signUp(input: $input) {
+                          errors {
+                            ... on BaseError {
+                              message
+                            }
+                          }
+                        }
+                      }
+                    `
+                  ),
+                  variables: {
+                    input: {
+                      ...values,
+                      returnTo: routes.profile,
+                    },
+                  },
+                })
+                .then(({ data }) => {
+                  let message = "Check log in link";
+                  if (data?.signUp.errors.length) {
+                    message =
+                      "Error: " +
+                      data.signUp.errors.map((e) => e.message).join(", ");
+                  }
+                  alert(message);
+                });
+            })}
+            className="flex flex-col w-full"
+          >
+            <div className="flex flex-row space-between w-full gap-3">
+              <TextInput
+                label="First name"
+                {...register("firstName", {
+                  required: "First name is required",
+                })}
+                error={formState.errors["firstName"]}
+              />
+              <TextInput
+                {...register("lastName", { required: "Last name is required" })}
+                label="Last name"
+                error={formState.errors["lastName"]}
+              />
+            </div>
+            <TextInput
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /\S+@\S+\.\S+/,
+                  message: "Please enter a valid email",
+                },
+              })}
               type="email"
-              onChange={formik.handleChange}
-              value={formik.values.email}
-              required
+              label="Email address"
+              error={formState.errors["email"]}
             />
             <fieldset>
               <legend>What best describes your profession?</legend>

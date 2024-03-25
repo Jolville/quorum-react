@@ -26,6 +26,7 @@ export function Typography(props: {
   size: FontSize;
   style?: "normal" | "bold" | "italic";
   className?: string;
+  ariaHidden?: boolean;
 }) {
   let fontStyle: string;
   switch (props.style) {
@@ -45,13 +46,19 @@ export function Typography(props: {
   switch (props.element) {
     case "h":
       return (
-        <h1 className={`${textSize} ${fontStyle} ${props.className ?? ""}`}>
+        <h1
+          className={`${textSize} ${fontStyle} ${props.className ?? ""}`}
+          aria-hidden={props.ariaHidden}
+        >
           {props.children}
         </h1>
       );
     case "p":
       return (
-        <p className={`${textSize} ${fontStyle} ${props.className ?? ""}`}>
+        <p
+          className={`${textSize} ${fontStyle} ${props.className ?? ""}`}
+          aria-hidden={props.ariaHidden}
+        >
           {props.children}
         </p>
       );
