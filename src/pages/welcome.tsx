@@ -1,13 +1,64 @@
-import { useForm } from "react-hook-form";
-import { Card, TextInput, Typography } from "../components";
+import { Controller, useForm } from "react-hook-form";
+import { Card, Select, TextInput, Typography } from "../components";
 import { useApolloClient, useSuspenseQuery } from "@apollo/client";
 import { graphql } from "../gql";
 import { redirect } from "react-router-dom";
 import routes from "../routes";
 
+const selectOptions: Array<{ value: string; label: string }> = [
+  {
+    value: "productDesigner",
+    label: "Product Designer",
+  },
+  {
+    value: "graphicDesigner",
+    label: "Graphic Designer",
+  },
+  {
+    value: "brandDesigner",
+    label: "Brand Designer",
+  },
+  {
+    value: "webDesigner",
+    label: "Web Designer",
+  },
+  {
+    value: "artDirector",
+    label: "Art Director",
+  },
+  {
+    value: "illustrator",
+    label: "Illustrator",
+  },
+  {
+    value: "motionDesigner",
+    label: "Motion Designer",
+  },
+  {
+    value: "contentDesigner",
+    label: "Content Designer",
+  },
+  {
+    value: "copywriter",
+    label: "Copywriter",
+  },
+  {
+    value: "engineer",
+    label: "Engineer",
+  },
+  {
+    value: "productManager",
+    label: "Product Manager",
+  },
+  {
+    value: "other",
+    label: "Other",
+  },
+];
+
 export function Welcome() {
   const apolloClient = useApolloClient();
-  const { register, handleSubmit, formState } = useForm<{
+  const { register, handleSubmit, formState, control } = useForm<{
     firstName: string;
     lastName: string;
     email: string;
@@ -110,118 +161,20 @@ export function Welcome() {
               label="Email address"
               error={formState.errors["email"]}
             />
-            <fieldset>
-              <legend>What best describes your profession?</legend>
-              <div>
-                <input
-                  type="radio"
-                  id="productDesigner"
-                  name="profession"
-                  value="Product Designer"
-                  required
+            <Controller
+              control={control}
+              name="profession"
+              render={(renderProps) => (
+                <Select
+                  options={selectOptions}
+                  value={selectOptions.find(
+                    (c) => c.value === renderProps.field.value
+                  )}
+                  onChange={(val) => renderProps.field.onChange(val?.value)}
                 />
-                <label htmlFor="productDesigner">Product Designer</label>
-              </div>
-              <div>
-                <input
-                  type="radio"
-                  id="graphicDesigner"
-                  name="profession"
-                  value="Graphic Designer"
-                />
-                <label htmlFor="graphicDesigner">Graphic Designer</label>
-              </div>
-              <div>
-                <input
-                  type="radio"
-                  id="brandDesigner"
-                  name="profession"
-                  value="Brand Designer"
-                />
-                <label htmlFor="brandDesigner">Brand Designer</label>
-              </div>
-              <div>
-                <input
-                  type="radio"
-                  id="webDesigner"
-                  name="profession"
-                  value="Web Designer"
-                />
-                <label htmlFor="webDesigner">Web Designer</label>
-              </div>
-              <div>
-                <input
-                  type="radio"
-                  id="artDirector"
-                  name="profession"
-                  value="Art Director"
-                />
-                <label htmlFor="artDirector">Art Director</label>
-              </div>
-              <div>
-                <input
-                  type="radio"
-                  id="illustrator"
-                  name="profession"
-                  value="Illustrator"
-                />
-                <label htmlFor="illustrator">Illustrator</label>
-              </div>
-              <div>
-                <input
-                  type="radio"
-                  id="motionDesigner"
-                  name="profession"
-                  value="Motion Designer"
-                />
-                <label htmlFor="motionDesigner">Motion Designer</label>
-              </div>
-              <div>
-                <input
-                  type="radio"
-                  id="contentDesigner"
-                  name="profession"
-                  value="Content Designer"
-                />
-                <label htmlFor="contentDesigner">Content Designer</label>
-              </div>
-              <div>
-                <input
-                  type="radio"
-                  id="copywriter"
-                  name="profession"
-                  value="Copywriter"
-                />
-                <label htmlFor="copywriter">Copywriter</label>
-              </div>
-              <div>
-                <input
-                  type="radio"
-                  id="engineer"
-                  name="profession"
-                  value="Engineer"
-                />
-                <label htmlFor="engineer">Engineer</label>
-              </div>
-              <div>
-                <input
-                  type="radio"
-                  id="productManager"
-                  name="profession"
-                  value="Product Manager"
-                />
-                <label htmlFor="productManager">Product Manager</label>
-              </div>
-              <div>
-                <input
-                  type="radio"
-                  id="other"
-                  name="profession"
-                  value="Other"
-                />
-                <label htmlFor="other">Other</label>
-              </div>
-            </fieldset>
+              )}
+              rules={{ required: true }}
+            />
             <button className="ml-auto" type="submit">
               Submit
             </button>
