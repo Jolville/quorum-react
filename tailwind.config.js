@@ -27,7 +27,7 @@ export default {
         "p-xl": ["20px", "1.2em"],
         "p-l": ["18px", "1.2em"],
         "p-m": ["16px", "1.2em"],
-        "p-sm": ["14px", "1.2em"],
+        "p-s": ["14px", "1.2em"],
         "p-xs": ["12px", "1.2em"],
       },
       colors: {
@@ -89,6 +89,8 @@ export default {
         "focus-ring-primary": "0px 0px 0px 4px rgba(125, 64, 86, 0.25)",
         "focus-ring-black": "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
         "focus-ring-error": "0px 0px 0px 4px rgba(240, 68, 56, 0.24)",
+        "focus-ring-gray-shadow":
+          "box-shadow: 0px 0px 0px 4px rgba(152, 162, 179, 0.14)",
       },
       boxShadowColor: {
         primary: {

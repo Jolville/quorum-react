@@ -1,5 +1,5 @@
 import { Controller, useForm } from "react-hook-form";
-import { Card, Select, TextInput, Typography } from "../components";
+import { Button, Card, Select, TextInput, Typography } from "../components";
 import { useApolloClient, useSuspenseQuery } from "@apollo/client";
 import { graphql } from "../gql";
 import { redirect } from "react-router-dom";
@@ -7,52 +7,52 @@ import routes from "../routes";
 
 const selectOptions: Array<{ value: string; label: string }> = [
   {
-    value: "productDesigner",
     label: "Product Designer",
+    value: "Product Designer",
   },
   {
-    value: "graphicDesigner",
     label: "Graphic Designer",
+    value: "Graphic Designer",
   },
   {
-    value: "brandDesigner",
     label: "Brand Designer",
+    value: "Brand Designer",
   },
   {
-    value: "webDesigner",
     label: "Web Designer",
+    value: "Web Designer",
   },
   {
-    value: "artDirector",
     label: "Art Director",
+    value: "Art Director",
   },
   {
-    value: "illustrator",
     label: "Illustrator",
+    value: "Illustrator",
   },
   {
-    value: "motionDesigner",
     label: "Motion Designer",
+    value: "Motion Designer",
   },
   {
-    value: "contentDesigner",
     label: "Content Designer",
+    value: "Content Designer",
   },
   {
-    value: "copywriter",
     label: "Copywriter",
+    value: "Copywriter",
   },
   {
-    value: "engineer",
     label: "Engineer",
+    value: "Engineer",
   },
   {
-    value: "productManager",
     label: "Product Manager",
+    value: "Product Manager",
   },
   {
-    value: "other",
     label: "Other",
+    value: "Other",
   },
 ];
 
@@ -133,8 +133,11 @@ export function Welcome() {
                   alert(message);
                 });
             })}
-            className="flex flex-col w-full"
+            className="flex flex-col w-full gap-2"
           >
+            <Typography size="l" element="p" style="bold">
+              What’s your name?
+            </Typography>
             <div className="flex flex-row space-between w-full gap-3">
               <TextInput
                 label="First name"
@@ -161,6 +164,9 @@ export function Welcome() {
               label="Email address"
               error={formState.errors["email"]}
             />
+            <Typography size="l" element="p" style="bold">
+              What best describes your profession?
+            </Typography>
             <Controller
               control={control}
               name="profession"
@@ -175,9 +181,14 @@ export function Welcome() {
               )}
               rules={{ required: true }}
             />
-            <button className="ml-auto" type="submit">
-              Submit
-            </button>
+            <Button
+              className="ml-auto mt-4"
+              size="l"
+              type="submit"
+              disabled={!formState.isValid}
+            >
+              Continue
+            </Button>
           </form>
         </div>
       </Card>

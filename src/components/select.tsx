@@ -26,7 +26,7 @@ export const Select: ReactSelect = (props) => {
         classNames={{
           control(state) {
             return clsx(
-              "text-gray-800 p-2 rounded-md",
+              "text-gray-800 p-1.5 rounded-md",
               state.isFocused
                 ? "border-primary-300 hover:border-primary-300 shadow-focus-ring-primary"
                 : "border-grey-300"

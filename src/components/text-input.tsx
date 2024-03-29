@@ -29,8 +29,10 @@ export const TextInput = React.forwardRef<
         ref={ref}
         type={props.type ?? "text"}
         className={clsx(
-          "border shadow-none border-gray-300 rounded-md shadow-xs px-4 py-3 outline-none focus:border-primary-300 focus:shadow-focus-ring-primary placeholder:text-gray-500 disabled:bg-gray-50",
-          props.error && "border-error-300 focus:shadow-focus-ring-error"
+          "border rounded-md shadow-xs px-4 py-3 outline-none placeholder:text-gray-500 disabled:bg-gray-50",
+          props.error
+            ? "border-error-300 focus:shadow-focus-ring-error"
+            : "shadow-none border-gray-300 focus:border-primary-300 focus:shadow-focus-ring-primary"
         )}
         aria-invalid={props.error ? "true" : "false"}
       />
