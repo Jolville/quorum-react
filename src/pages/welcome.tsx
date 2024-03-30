@@ -1,6 +1,6 @@
 import { Controller, useForm } from "react-hook-form";
 import { Button, Card, Select, TextInput, Typography } from "../components";
-import { useApolloClient, useSuspenseQuery } from "@apollo/client";
+import { useApolloClient, useMutation, useSuspenseQuery } from "@apollo/client";
 import { graphql } from "../gql";
 import { redirect } from "react-router-dom";
 import routes from "../routes";
@@ -58,7 +58,6 @@ const selectOptions: Array<{ value: string; label: string }> = [
 ];
 
 export function Welcome() {
-  const apolloClient = useApolloClient();
   const [submittedAt, setSubmittedAt] = useState<Date | null>(null);
   const { register, handleSubmit, formState, control, getValues } = useForm<{
     firstName: string;
@@ -77,6 +76,22 @@ export function Welcome() {
         }
       }
     `)
+  );
+
+  const [signUpMutation, { loading }] = useMutation(
+    graphql(
+      `
+        mutation SignUp($input: SignUpInput!) {
+          signUp(input: $input) {
+            errors {
+              ... on BaseError {
+                message
+              }
+            }
+          }
+        }
+      `
+    )
   );
 
   if (data.customer) {
@@ -124,45 +139,25 @@ export function Welcome() {
             <form
               onSubmit={handleSubmit((values) => {
                 console.log(values);
-                apolloClient
-                  .mutate({
-                    mutation: graphql(
-                      `
-                        mutation SignUp($input: SignUpInput!) {
-                          signUp(input: $input) {
-                            errors {
-                              ... on BaseError {
-                                message
-                              }
-                            }
-                          }
-                        }
-                      `
-                    ),
-                    variables: {
-                      input: {
-                        ...values,
-                        returnTo: routes.profile,
-                      },
-                    },
-                  })
-                  .then(({ data }) => {
-                    if (data?.signUp.errors.length) {
-                      const message =
-                        "Error: " +
-                        data.signUp.errors.map((e) => e.message).join(", ");
-                      alert(message);
-                    } else {
-                      setSubmittedAt(new Date());
-                    }
-                  });
+                signUpMutation({
+                  variables: { input: { ...values, returnTo: "/profile" } },
+                }).then(({ data }) => {
+                  if (data?.signUp.errors.length) {
+                    const message =
+                      "Error: " +
+                      data.signUp.errors.map((e) => e.message).join(", ");
+                    alert(message);
+                  } else {
+                    setSubmittedAt(new Date());
+                  }
+                });
               })}
               className="flex flex-col w-full gap-2"
             >
               <Typography size="l" element="p" style="bold">
-                What’s your name?
+                What&apos;s your name?
               </Typography>
-              <div className="flex flex-row space-between w-full gap-3">
+              <div className="flex flex-col md:flex-row space-between w-full gap-3">
                 <TextInput
                   label="First name"
                   {...register("firstName", {
@@ -211,6 +206,7 @@ export function Welcome() {
                 className="ml-auto mt-4"
                 size="l"
                 type="submit"
+                isLoading={loading}
                 disabled={!formState.isValid}
               >
                 Continue
