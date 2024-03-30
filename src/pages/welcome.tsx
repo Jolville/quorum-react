@@ -1,9 +1,8 @@
 import { Controller, useForm } from "react-hook-form";
 import { Button, Card, Select, TextInput, Typography } from "../components";
-import { useApolloClient, useMutation, useSuspenseQuery } from "@apollo/client";
+import { useMutation, useSuspenseQuery } from "@apollo/client";
 import { graphql } from "../gql";
 import { redirect } from "react-router-dom";
-import routes from "../routes";
 import { useState } from "react";
 
 const selectOptions: Array<{ value: string; label: string }> = [
