@@ -1,5 +1,5 @@
 import { Controller, useForm } from "react-hook-form";
-import { Button, Card, Select, TextInput, Typography } from "../components";
+import { Button, Select, TextInput, Typography } from "../components";
 import { useMutation, useSuspenseQuery } from "@apollo/client";
 import { graphql } from "../gql";
 import { redirect } from "react-router-dom";
@@ -99,8 +99,8 @@ export function Welcome() {
   }
 
   return (
-    <div className="h-full w-full flex justify-center items-center">
-      <Card>
+    <div className="w-full h-full md:h-auto flex justify-center bg-white md:bg-gray-100">
+      <div className="p-4 bg-white md:mt-12 md:p-8 md:rounded-2xl md:shadow-lg">
         {submittedAt ? (
           <div className="flex flex-col gap-4 text-gray-800 text-center max-w-96">
             <Typography
@@ -172,6 +172,9 @@ export function Welcome() {
                   error={formState.errors["lastName"]}
                 />
               </div>
+              <Typography size="l" element="p" style="bold">
+                What&apos;s your email?
+              </Typography>
               <TextInput
                 {...register("email", {
                   required: "Email is required",
@@ -213,7 +216,7 @@ export function Welcome() {
             </form>
           </div>
         )}
-      </Card>
+      </div>
     </div>
   );
 }
