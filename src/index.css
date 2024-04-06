@@ -27,3 +27,13 @@
   border-radius: 8px;
   background: linear-gradient(135deg, #e9eef6 68%, #b1bfd7 100%);
 }
+
+.hifi-block {
+  background: linear-gradient(225deg, #de799e 0.35%, #b21661 100.35%);
+  box-shadow: -2px 2px 4px 0px #ffffff8c inset;
+  box-shadow: 0px 2px 4px 0px #00000040;
+  width: 40px;
+  border-radius: 8px;
+  border: 0px 1px 0px 0px;
+  opacity: 0px;
+}
