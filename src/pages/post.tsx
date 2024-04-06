@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@apollo/client";
 import * as uuid from "uuid";
 import { graphql } from "../gql";
 import { useParams } from "react-router-dom";
-import { Typography } from "../components";
+import { TextArea, Typography } from "../components";
 import { UseFormRegisterReturn, useForm } from "react-hook-form";
 import { DesignPhase } from "../gql/graphql";
 
@@ -26,15 +26,12 @@ export function Post() {
     }
   );
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<{
+  const { register, handleSubmit, formState } = useForm<{
     designPhase: DesignPhase;
+    content: string;
   }>();
   const onSubmit = (data: unknown) => console.log(data);
-  console.log(errors);
+  console.log(formState.errors);
 
   if (!data.post) {
     return (
@@ -82,6 +79,26 @@ export function Post() {
               register={register("designPhase", { required: true })}
             />
           </div>
+        </div>
+        <div className="flex flex-col space-2">
+          <Typography
+            size="xl"
+            element="p"
+            style="bold"
+            className="text-gray-800 mb-2"
+          >
+            Context
+          </Typography>
+          <TextArea
+            {...register("content", {
+              required: "Content is required",
+            })}
+            error={formState.errors["content"]}
+            placeholder="Text goes here"
+            rows={5}
+            characterCount
+            maxLength={350}
+          />
         </div>
       </form>
     );
