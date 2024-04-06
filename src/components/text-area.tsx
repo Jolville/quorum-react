@@ -14,11 +14,12 @@ export const TextArea = React.forwardRef<
     hint?: string;
     error: FieldError | undefined;
     rows?: number;
-    characterCount?: boolean;
+    showCharacterCount?: boolean;
     maxLength?: number;
   }
 >((props, ref) => {
   const [currentValue, setCurrentValue] = useState<string>();
+  const { showCharacterCount, ...textAreaProps } = props;
   return (
     <div className="flex flex-col space-y-1 w-full text-gray-600">
       {props.label && (
@@ -30,7 +31,7 @@ export const TextArea = React.forwardRef<
       )}
       <div className="relative flex flex-col w-full">
         <textarea
-          {...props}
+          {...textAreaProps}
           ref={ref}
           onChange={(e) => {
             setCurrentValue(e.currentTarget.value);
@@ -43,7 +44,7 @@ export const TextArea = React.forwardRef<
           )}
           aria-invalid={props.error ? "true" : "false"}
         />
-        {props.characterCount && (
+        {showCharacterCount && (
           <Typography
             size="s"
             element="p"

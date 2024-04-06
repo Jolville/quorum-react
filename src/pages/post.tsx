@@ -2,9 +2,10 @@ import { useSuspenseQuery } from "@apollo/client";
 import * as uuid from "uuid";
 import { graphql } from "../gql";
 import { useParams } from "react-router-dom";
-import { TextArea, Typography } from "../components";
+import { Button, TextArea, Typography } from "../components";
 import { UseFormRegisterReturn, useForm } from "react-hook-form";
 import { DesignPhase } from "../gql/graphql";
+import clsx from "clsx";
 
 export function Post() {
   const { postId } = useParams();
@@ -79,6 +80,17 @@ export function Post() {
               register={register("designPhase", { required: true })}
             />
           </div>
+          <Typography
+            size="s"
+            element="p"
+            className={clsx(
+              "text-error-500",
+              !formState.errors.designPhase && "invisible"
+            )}
+            ariaHidden={!formState.errors.designPhase}
+          >
+            Design phase is required
+          </Typography>
         </div>
         <div className="flex flex-col space-2">
           <Typography
@@ -96,9 +108,14 @@ export function Post() {
             error={formState.errors["content"]}
             placeholder="Text goes here"
             rows={5}
-            characterCount
+            showCharacterCount
             maxLength={350}
           />
+        </div>
+        <div className="flex flex-row">
+          <Button size="m" disabled={!formState.errors} type="submit">
+            Post
+          </Button>
         </div>
       </form>
     );
