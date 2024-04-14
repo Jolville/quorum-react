@@ -16,13 +16,6 @@ export type Scalars = {
   Float: { input: number; output: number; }
   Time: { input: string; output: string; }
   UUID: { input: string; output: string; }
-  Upload: { input: any; output: any; }
-};
-
-export type AuthorUnknownError = BaseError & {
-  __typename?: 'AuthorUnknownError';
-  message: Scalars['String']['output'];
-  path?: Maybe<Array<Scalars['String']['output']>>;
 };
 
 export type BaseError = {
@@ -62,10 +55,23 @@ export type ErrPostNotOwned = BaseError & {
   path?: Maybe<Array<Scalars['String']['output']>>;
 };
 
-export type FileTooLargeError = BaseError & {
-  __typename?: 'FileTooLargeError';
-  message: Scalars['String']['output'];
-  path?: Maybe<Array<Scalars['String']['output']>>;
+export type GenerateSignedPostOptionUrInput = {
+  contentType: Scalars['String']['input'];
+  /**
+   * Generates a url to upload the file too based off this filename.
+   * The name is ignored, but the extension is not.
+   */
+  fileName: Scalars['String']['input'];
+};
+
+export type GenerateSignedPostOptionUrlError = UnauthenticatedError | UnsupportedFileTypeError;
+
+export type GenerateSignedPostOptionUrlPayload = {
+  __typename?: 'GenerateSignedPostOptionUrlPayload';
+  bucketName: Scalars['String']['output'];
+  errors: Array<GenerateSignedPostOptionUrlError>;
+  fileKey: Scalars['String']['output'];
+  url: Scalars['String']['output'];
 };
 
 export type GetLoginLinkError = CustomerNotFoundError | InvalidEmailError | InvalidReturnToError;
@@ -100,10 +106,16 @@ export type LinkExpiredError = BaseError & {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  generateSignedPostOptionUrl: GenerateSignedPostOptionUrlPayload;
   getLoginLink: GetLoginLinkPayload;
   signUp: SignUpPayload;
   upsertPost: UpsertPostPayload;
   verifyCustomerToken: VerifyCustomerTokenPayload;
+};
+
+
+export type MutationGenerateSignedPostOptionUrlArgs = {
+  input: GenerateSignedPostOptionUrInput;
 };
 
 
@@ -215,13 +227,19 @@ export type TooManyOptionsError = BaseError & {
   path?: Maybe<Array<Scalars['String']['output']>>;
 };
 
+export type UnauthenticatedError = BaseError & {
+  __typename?: 'UnauthenticatedError';
+  message: Scalars['String']['output'];
+  path?: Maybe<Array<Scalars['String']['output']>>;
+};
+
 export type UnsupportedFileTypeError = BaseError & {
   __typename?: 'UnsupportedFileTypeError';
   message: Scalars['String']['output'];
   path?: Maybe<Array<Scalars['String']['output']>>;
 };
 
-export type UpsertPostError = AuthorUnknownError | ClosesAtNotAfterOpensAtError | ErrPostNotOwned | FileTooLargeError | OpensAtAlreadyPassedError | TooFewOptionsError | TooManyOptionsError | UnsupportedFileTypeError;
+export type UpsertPostError = ClosesAtNotAfterOpensAtError | ErrPostNotOwned | OpensAtAlreadyPassedError | TooFewOptionsError | TooManyOptionsError | UnauthenticatedError | UnsupportedFileTypeError;
 
 export type UpsertPostInput = {
   category?: InputMaybe<PostCategory>;
@@ -234,7 +252,8 @@ export type UpsertPostInput = {
 };
 
 export type UpsertPostOptionInput = {
-  file?: InputMaybe<Scalars['Upload']['input']>;
+  bucketName: Scalars['String']['input'];
+  filePath: Scalars['String']['input'];
   id: Scalars['UUID']['input'];
   position: Scalars['Int']['input'];
 };
