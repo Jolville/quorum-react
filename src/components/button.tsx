@@ -2,7 +2,7 @@ import clsx from "clsx";
 
 export function Button(
   props: JSX.IntrinsicElements["button"] & {
-    variant?: "primary" | "gray" | "secondary";
+    variant?: "primary" | "gray" | "secondary" | "destructive-secondary";
     size?: "s" | "m" | "l" | "xl" | "2xl";
     isLoading?: boolean;
   }
@@ -36,6 +36,11 @@ export function Button(
         variant === "secondary" &&
           !props.isLoading &&
           "hover:bg-primary-100 focus:focus-ring-gray-shadow disabled:bg-white disabled:border disabled:border-gray-200 disabled:text-gray-400",
+        variant === "destructive-secondary" &&
+          "text-error-700 bg-white border border-error-300 shadow-xs",
+        variant === "destructive-secondary" &&
+          !props.isLoading &&
+          "hover:bg-error-50 focus:focus-ring-error disabled:bg-white disabled:border disabled:border-gray-200 disabled:text-gray-400",
         size === "s" && "px-3 py-2 text-p-s",
         size === "m" && "px-[14px] py-[10px] text-p-s",
         size === "l" && "px-4 py-[10px] text-p-m",

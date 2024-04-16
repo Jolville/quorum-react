@@ -5,8 +5,11 @@ import { useParams } from "react-router-dom";
 import { Button, TextArea, Typography } from "../components";
 import { UseFormRegisterReturn, useFieldArray, useForm } from "react-hook-form";
 import UploadCloud02 from "../icons/upload-cloud-02.svg?react";
+import Eye from "../icons/eye.svg?react";
+import Trash from "../icons/trash.svg?react";
 import { DesignPhase, UpsertPostOptionInput } from "../gql/graphql";
 import clsx from "clsx";
+import React from "react";
 
 const bucketName = "quorum-vote";
 
@@ -153,6 +156,7 @@ export function Post() {
               setValue={(filePath: string) =>
                 setValue(`options.${i}.filePath`, filePath)
               }
+              index={i}
             />
           ))}
         </div>
@@ -216,12 +220,69 @@ function DesignPhaseOption(props: {
 function DesignOption(props: {
   id: string;
   setValue: (filePath: string) => void;
+  index: number;
 }) {
+  const [objectUrl, setObjectUrl] = React.useState<string | null>(null);
+  const [file, setFile] = React.useState<File | null>(null);
+  React.useEffect(() => {
+    if (file) {
+      setObjectUrl(URL.createObjectURL(file));
+    } else {
+      setObjectUrl(null);
+    }
+  }, [file]);
+
+  if (objectUrl) {
+    return (
+      <div className="rounded-lg border border-gray-300 flex flex-row md:flex-col space-x-2 space-y-2 items-center justify-center p-4 h-44 md:h-80">
+        <div className="rounded-lg bg-gray-200 w-full h-full p-1 flex-grow flex items-center justify-center">
+          <img
+            src={objectUrl}
+            onLoad={() => URL.revokeObjectURL(objectUrl)}
+            className="max-h-28 md:max-h-32 max-w-32 md:max-w-40"
+          />
+        </div>
+        <div className="flex flex-col items-center justify-center min-w-24 h-full md:h-auto md:w-full space-y-2">
+          <Typography
+            element="p"
+            size="l"
+            style="bold"
+            className="text-left w-full mb-2"
+          >
+            Option #{props.index + 1}
+          </Typography>
+          <Button
+            variant="secondary"
+            size="s"
+            className="w-full font-bold"
+            type="button"
+          >
+            <span className="flex flex-row items-center justify-center space-x-1">
+              <Eye />
+              <span>Preview</span>
+            </span>
+          </Button>
+          <Button
+            variant="destructive-secondary"
+            size="s"
+            className="w-full font-bold"
+            type="button"
+          >
+            <span className="flex flex-row items-center justify-center space-x-1">
+              <Trash />
+              <span>Remove</span>
+            </span>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <label
         htmlFor={props.id}
-        className="rounded-lg border border-primary-500 border-dashed flex flex-col space-y-4 items-center justify-center py-6 md:py-20"
+        className="rounded-lg border border-primary-500 border-dashed flex flex-col space-y-4 items-center justify-center h-44 md:h-80"
       >
         <div
           className="h-10 w-10 rounded border border-gray-200 shadow-xs flex items-center justify-center text-gray-600"
@@ -248,6 +309,13 @@ function DesignOption(props: {
         name={props.id}
         accept=".png,.jpeg,.gif"
         className="hidden"
+        onChange={(e) => {
+          const targetFile = e.target.files?.[0];
+          if (!targetFile) {
+            throw new Error("expected file to be non-null");
+          }
+          setFile(targetFile);
+        }}
       />
     </div>
   );

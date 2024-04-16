@@ -60,8 +60,10 @@ export default {
           900: "#28151c",
         },
         error: {
+          50: "#fdf3f3",
           300: "#f8a6a0",
           500: "#db574d",
+          700: "#a92c23",
         },
         warning: {
           100: "#fffaeb",
