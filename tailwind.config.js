@@ -63,6 +63,7 @@ export default {
           50: "#fdf3f3",
           300: "#f8a6a0",
           500: "#db574d",
+          600: "#cd382d",
           700: "#a92c23",
         },
         warning: {
@@ -76,7 +77,7 @@ export default {
           100: "#ecfdf3",
           200: "#98ddba",
           300: "#17b26a",
-          400: "#17b26a",
+          400: "#079455",
           500: "#074d31",
         },
         information: {

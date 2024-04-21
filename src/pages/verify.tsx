@@ -3,12 +3,14 @@ import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { graphql } from "../gql";
 import routes from "../routes";
+import { useAuth } from "../hooks";
 
 export function Verify() {
   const [searchParams] = useSearchParams();
   const apolloClient = useApolloClient();
   const navigate = useNavigate();
   const isVerifying = useRef(false);
+  const auth = useAuth();
   const returnTo = searchParams.get("returnTo") || "/profile";
   const token = searchParams.get("token");
 
@@ -57,10 +59,7 @@ export function Verify() {
           // should not get here, we can just ask for login again...
           return navigate(routes.login);
         }
-        window.localStorage.setItem(
-          "token",
-          data?.verifyCustomerToken.newToken
-        );
+        auth.setToken({ value: data.verifyCustomerToken.newToken });
         return navigate(returnTo);
       });
   }, []);

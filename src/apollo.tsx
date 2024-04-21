@@ -9,7 +9,7 @@ const authLink = setContext((_, { headers }) => {
   const token = localStorage.getItem("token");
   let headersCopy = { ...headers };
   if (token) {
-    headersCopy["authorization"] = `Bearer ${token}`;
+    headersCopy["authorization"] = `Bearer ${JSON.parse(token).value}`;
   }
   return { headers: headersCopy };
 });

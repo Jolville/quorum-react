@@ -1,8 +1,8 @@
-import { useSuspenseQuery } from "@apollo/client";
+import { useMutation, useSuspenseQuery } from "@apollo/client";
 import * as uuid from "uuid";
 import { graphql } from "../gql";
-import { useParams } from "react-router-dom";
-import { Button, TextArea, Typography } from "../components";
+import { useNavigate, useParams } from "react-router-dom";
+import { Button, ProgressBar, TextArea, Typography } from "../components";
 import { UseFormRegisterReturn, useFieldArray, useForm } from "react-hook-form";
 import UploadCloud02 from "../icons/upload-cloud-02.svg?react";
 import Eye from "../icons/eye.svg?react";
@@ -10,11 +10,16 @@ import Trash from "../icons/trash.svg?react";
 import { DesignPhase, UpsertPostOptionInput } from "../gql/graphql";
 import clsx from "clsx";
 import React from "react";
+import { ToastContext } from "../components";
+import { useAuth } from "../hooks";
+import routes from "../routes";
 
-const bucketName = "quorum-vote";
+const supportedFileTypes = ["image/jpeg", "image/png", "image/gif"];
 
 export function Post() {
   const { postId } = useParams();
+  const auth = useAuth();
+  const navigate = useNavigate();
   if (!postId || !uuid.validate(postId)) {
     throw new Error("expected postId to be a uuid");
   }
@@ -42,15 +47,12 @@ export function Post() {
       options: [
         {
           id: uuid.v4(),
-          bucketName,
         },
         {
           id: uuid.v4(),
-          bucketName,
         },
         {
           id: uuid.v4(),
-          bucketName,
         },
       ],
     },
@@ -61,7 +63,12 @@ export function Post() {
   });
 
   const onSubmit = (data: unknown) => console.log(data);
-  console.log(formState.errors);
+
+  React.useEffect(() => {
+    if (!data.post && !auth.token) {
+      navigate(routes.login);
+    }
+  }, [data, auth]);
 
   if (!data.post) {
     return (
@@ -157,6 +164,7 @@ export function Post() {
                 setValue(`options.${i}.filePath`, filePath)
               }
               index={i}
+              key={field.id}
             />
           ))}
         </div>
@@ -224,9 +232,87 @@ function DesignOption(props: {
 }) {
   const [objectUrl, setObjectUrl] = React.useState<string | null>(null);
   const [file, setFile] = React.useState<File | null>(null);
+  const toastContext = React.useContext(ToastContext);
+
+  const [generateSignedUrl, { loading: generateSignedUrlLoading }] =
+    useMutation(
+      graphql(`
+        mutation GenerateSignedPostOptionUrl(
+          $input: GenerateSignedPostOptionUrInput!
+        ) {
+          generateSignedPostOptionUrl(input: $input) {
+            url
+            bucketName
+            errors {
+              ... on BaseError {
+                message
+              }
+            }
+          }
+        }
+      `)
+    );
+
+  const [fileUploading, setFileUploading] = React.useState(false);
+  const [fileUploadProgress, setFileUploadProgress] = React.useState(0);
+
   React.useEffect(() => {
     if (file) {
+      // TODO throw if too big
       setObjectUrl(URL.createObjectURL(file));
+      generateSignedUrl({
+        variables: {
+          input: {
+            contentType: "text/plain;charset=UTF-8",
+            fileName: file.name,
+          },
+        },
+      })
+        .then((resp) => {
+          if (resp.data?.generateSignedPostOptionUrl) {
+            setFileUploading(true);
+            setFileUploadProgress(0);
+            const reader = new FileReader();
+            const xhr = new XMLHttpRequest();
+            xhr.onerror = (e) => {
+              throw e;
+            };
+            reader.onload = (e) => {
+              xhr.send(e.target?.result);
+            };
+            xhr.upload.addEventListener(
+              "progress",
+              (e) => {
+                if (e.lengthComputable) {
+                  const percentage = Math.round((e.loaded * 100) / e.total);
+                  setFileUploadProgress(percentage);
+                }
+              },
+              false
+            );
+            xhr.upload.addEventListener(
+              "load",
+              () => {
+                setFileUploadProgress(100);
+                setFileUploading(false);
+              },
+              false
+            );
+            xhr.open("PUT", resp.data.generateSignedPostOptionUrl.url);
+            xhr.overrideMimeType("text/plain; charset=x-user-defined-binary");
+            xhr.onerror = (err) => {
+              throw err;
+            };
+            reader.readAsBinaryString(file);
+          }
+        })
+        .catch(() => {
+          toastContext.addToast({
+            level: "error",
+            title: "There was an error uploading your file",
+            description: "Please refresh the page and try again.",
+          });
+        });
     } else {
       setObjectUrl(null);
     }
@@ -235,12 +321,21 @@ function DesignOption(props: {
   if (objectUrl) {
     return (
       <div className="rounded-lg border border-gray-300 flex flex-row md:flex-col space-x-2 space-y-2 items-center justify-center p-4 h-44 md:h-80">
-        <div className="rounded-lg bg-gray-200 w-full h-full p-1 flex-grow flex items-center justify-center">
+        <div className="rounded-lg bg-gray-200 w-full h-full p-1 flex-grow flex items-center justify-center relative">
           <img
             src={objectUrl}
             onLoad={() => URL.revokeObjectURL(objectUrl)}
-            className="max-h-28 md:max-h-32 max-w-32 md:max-w-40"
+            className={clsx(
+              "max-h-28 md:max-h-32 max-w-32 md:max-w-40",
+              (generateSignedUrlLoading || fileUploading) && "opacity-50"
+            )}
           />
+          {generateSignedUrlLoading ||
+            (fileUploading && (
+              <div className="absolute bottom-2 w-full px-2">
+                <ProgressBar percentage={fileUploadProgress} />
+              </div>
+            ))}
         </div>
         <div className="flex flex-col items-center justify-center min-w-24 h-full md:h-auto md:w-full space-y-2">
           <Typography
@@ -282,7 +377,23 @@ function DesignOption(props: {
     <div>
       <label
         htmlFor={props.id}
-        className="rounded-lg border border-primary-500 border-dashed flex flex-col space-y-4 items-center justify-center h-44 md:h-80"
+        className="rounded-lg border border-primary-500 border-dashed flex flex-col space-y-4 items-center justify-center h-44 md:h-80 cursor-pointer"
+        onDragEnter={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+        }}
+        onDragOver={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+        }}
+        onDrop={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          const droppedFile = e.dataTransfer.files[0];
+          if (droppedFile && supportedFileTypes.includes(droppedFile.type)) {
+            setFile(droppedFile);
+          }
+        }}
       >
         <div
           className="h-10 w-10 rounded border border-gray-200 shadow-xs flex items-center justify-center text-gray-600"
