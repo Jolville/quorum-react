@@ -7,14 +7,19 @@ import { UseFormRegisterReturn, useFieldArray, useForm } from "react-hook-form";
 import UploadCloud02 from "../icons/upload-cloud-02.svg?react";
 import Eye from "../icons/eye.svg?react";
 import Trash from "../icons/trash.svg?react";
+import XClose from "../icons/x-close.svg?react";
 import { DesignPhase, UpsertPostOptionInput } from "../gql/graphql";
 import clsx from "clsx";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ToastContext } from "../components";
 import { useAuth } from "../hooks";
 import routes from "../routes";
 
 const supportedFileTypes = ["image/jpeg", "image/png", "image/gif"];
+
+type PostOptionFormProps = Omit<UpsertPostOptionInput, "position"> & {
+  isLoading: boolean;
+};
 
 export function Post() {
   const { postId } = useParams();
@@ -38,29 +43,71 @@ export function Post() {
     }
   );
 
-  const { register, handleSubmit, formState, control, setValue } = useForm<{
-    designPhase: DesignPhase;
-    content: string;
-    options: Omit<UpsertPostOptionInput, "position">[];
-  }>({
-    defaultValues: {
-      options: [
-        {
-          id: uuid.v4(),
-        },
-        {
-          id: uuid.v4(),
-        },
-        {
-          id: uuid.v4(),
-        },
-      ],
-    },
-  });
+  const { register, handleSubmit, formState, control, setValue, watch } =
+    useForm<{
+      designPhase: DesignPhase;
+      content: string;
+      options: PostOptionFormProps[];
+    }>({
+      defaultValues: {
+        options: [
+          {
+            id: uuid.v4(),
+            isLoading: false,
+          },
+          {
+            id: uuid.v4(),
+            isLoading: false,
+          },
+          {
+            id: uuid.v4(),
+            isLoading: false,
+          },
+        ],
+      },
+    });
+
   const optionsFieldArray = useFieldArray({
     control,
     name: "options",
   });
+
+  const numberOfOptionsAdded = watch().options.reduce<number>(
+    (acc, curr) => (curr.fileKey ? acc + 1 : acc),
+    0
+  );
+
+  console.log(
+    numberOfOptionsAdded,
+    optionsFieldArray.fields.length,
+    watch().options
+  );
+
+  useEffect(() => {
+    if (optionsFieldArray.fields.length < 3) {
+      optionsFieldArray.append({
+        id: uuid.v4(),
+        isLoading: false,
+        fileKey: "",
+        bucketName: "",
+      });
+    } else if (
+      numberOfOptionsAdded === optionsFieldArray.fields.length &&
+      optionsFieldArray.fields.length < 6
+    ) {
+      optionsFieldArray.append({
+        id: uuid.v4(),
+        isLoading: false,
+        fileKey: "",
+        bucketName: "",
+      });
+    }
+  }, [
+    optionsFieldArray.fields.length,
+    optionsFieldArray.remove,
+    optionsFieldArray.append,
+    numberOfOptionsAdded,
+  ]);
 
   const onSubmit = (data: unknown) => console.log(data);
 
@@ -160,11 +207,22 @@ export function Post() {
           {optionsFieldArray.fields.map((field, i) => (
             <DesignOption
               id={field.id}
-              setValue={(filePath: string) =>
-                setValue(`options.${i}.filePath`, filePath)
-              }
+              setValue={(
+                props:
+                  | { isLoading: true }
+                  | { isLoading: false; fileKey: string; bucketName: string }
+              ) => {
+                if (!props.isLoading) {
+                  setValue(`options.${i}.isLoading`, false);
+                  setValue(`options.${i}.fileKey`, props.fileKey);
+                  setValue(`options.${i}.bucketName`, props.bucketName);
+                } else {
+                  setValue(`options.${i}.isLoading`, true);
+                }
+              }}
               index={i}
               key={field.id}
+              onRemove={() => optionsFieldArray.remove(i)}
             />
           ))}
         </div>
@@ -227,31 +285,36 @@ function DesignPhaseOption(props: {
 
 function DesignOption(props: {
   id: string;
-  setValue: (filePath: string) => void;
+  setValue: (
+    props:
+      | { isLoading: true }
+      | { isLoading: false; fileKey: string; bucketName: string }
+  ) => void;
   index: number;
+  onRemove: () => void;
 }) {
   const [objectUrl, setObjectUrl] = React.useState<string | null>(null);
   const [file, setFile] = React.useState<File | null>(null);
   const toastContext = React.useContext(ToastContext);
 
-  const [generateSignedUrl, { loading: generateSignedUrlLoading }] =
-    useMutation(
-      graphql(`
-        mutation GenerateSignedPostOptionUrl(
-          $input: GenerateSignedPostOptionUrInput!
-        ) {
-          generateSignedPostOptionUrl(input: $input) {
-            url
-            bucketName
-            errors {
-              ... on BaseError {
-                message
-              }
+  const [generateSignedUrl] = useMutation(
+    graphql(`
+      mutation GenerateSignedPostOptionUrl(
+        $input: GenerateSignedPostOptionUrInput!
+      ) {
+        generateSignedPostOptionUrl(input: $input) {
+          url
+          bucketName
+          fileKey
+          errors {
+            ... on BaseError {
+              message
             }
           }
         }
-      `)
-    );
+      }
+    `)
+  );
 
   const [fileUploading, setFileUploading] = React.useState(false);
   const [fileUploadProgress, setFileUploadProgress] = React.useState(0);
@@ -260,6 +323,9 @@ function DesignOption(props: {
     if (file) {
       // TODO throw if too big
       setObjectUrl(URL.createObjectURL(file));
+      setFileUploading(true);
+      props.setValue({ isLoading: true });
+      setFileUploadProgress(0);
       generateSignedUrl({
         variables: {
           input: {
@@ -269,9 +335,10 @@ function DesignOption(props: {
         },
       })
         .then((resp) => {
+          if (resp.data?.generateSignedPostOptionUrl.errors?.length) {
+            throw resp.data.generateSignedPostOptionUrl.errors;
+          }
           if (resp.data?.generateSignedPostOptionUrl) {
-            setFileUploading(true);
-            setFileUploadProgress(0);
             const reader = new FileReader();
             const xhr = new XMLHttpRequest();
             xhr.onerror = (e) => {
@@ -295,6 +362,16 @@ function DesignOption(props: {
               () => {
                 setFileUploadProgress(100);
                 setFileUploading(false);
+                if (!resp.data?.generateSignedPostOptionUrl) {
+                  throw new Error(
+                    "expected generateSignedPostOptionUrl to be truthy"
+                  );
+                }
+                props.setValue({
+                  isLoading: false,
+                  fileKey: resp.data.generateSignedPostOptionUrl.fileKey,
+                  bucketName: resp.data.generateSignedPostOptionUrl.bucketName,
+                });
               },
               false
             );
@@ -306,70 +383,107 @@ function DesignOption(props: {
             reader.readAsBinaryString(file);
           }
         })
-        .catch(() => {
+        .catch((e) => {
+          console.log(e);
           toastContext.addToast({
             level: "error",
             title: "There was an error uploading your file",
             description: "Please refresh the page and try again.",
           });
+          setFileUploading(false);
         });
     } else {
       setObjectUrl(null);
     }
   }, [file]);
 
+  const [showPreview, setShowPreview] = useState(false);
+
+  useEffect(() => {
+    () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [objectUrl]);
+
   if (objectUrl) {
     return (
-      <div className="rounded-lg border border-gray-300 flex flex-row md:flex-col space-x-2 space-y-2 items-center justify-center p-4 h-44 md:h-80">
-        <div className="rounded-lg bg-gray-200 w-full h-full p-1 flex-grow flex items-center justify-center relative">
-          <img
-            src={objectUrl}
-            onLoad={() => URL.revokeObjectURL(objectUrl)}
-            className={clsx(
-              "max-h-28 md:max-h-32 max-w-32 md:max-w-40",
-              (generateSignedUrlLoading || fileUploading) && "opacity-50"
-            )}
-          />
-          {generateSignedUrlLoading ||
-            (fileUploading && (
+      <>
+        <div className="rounded-lg border border-gray-300 flex flex-row md:flex-col space-x-2 space-y-2 items-center justify-center p-4 h-44 md:h-80">
+          <div className="rounded-lg bg-gray-200 w-full h-full p-1 flex-grow flex items-center justify-center relative">
+            <img
+              src={objectUrl}
+              className={clsx(
+                "max-h-28 md:max-h-32 max-w-32 md:max-w-40",
+                fileUploading && "opacity-30"
+              )}
+            />
+            {fileUploading && (
               <div className="absolute bottom-2 w-full px-2">
                 <ProgressBar percentage={fileUploadProgress} />
               </div>
-            ))}
+            )}
+          </div>
+          <div className="flex flex-col items-center justify-center min-w-24 h-full md:h-auto md:w-full space-y-2">
+            <Typography
+              element="p"
+              size="l"
+              style="bold"
+              className="text-left w-full mb-2"
+            >
+              Option #{props.index + 1}
+            </Typography>
+            <Button
+              variant="secondary"
+              size="s"
+              className="w-full font-bold"
+              type="button"
+              onClick={() => setShowPreview(true)}
+            >
+              <span className="flex flex-row items-center justify-center space-x-1">
+                <Eye />
+                <span>Preview</span>
+              </span>
+            </Button>
+            <Button
+              variant="destructive-secondary"
+              size="s"
+              className="w-full font-bold"
+              type="button"
+              onClick={props.onRemove}
+            >
+              <span className="flex flex-row items-center justify-center space-x-1">
+                <Trash />
+                <span>Remove</span>
+              </span>
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-col items-center justify-center min-w-24 h-full md:h-auto md:w-full space-y-2">
-          <Typography
-            element="p"
-            size="l"
-            style="bold"
-            className="text-left w-full mb-2"
-          >
-            Option #{props.index + 1}
-          </Typography>
-          <Button
-            variant="secondary"
-            size="s"
-            className="w-full font-bold"
-            type="button"
-          >
-            <span className="flex flex-row items-center justify-center space-x-1">
-              <Eye />
-              <span>Preview</span>
-            </span>
-          </Button>
-          <Button
-            variant="destructive-secondary"
-            size="s"
-            className="w-full font-bold"
-            type="button"
-          >
-            <span className="flex flex-row items-center justify-center space-x-1">
-              <Trash />
-              <span>Remove</span>
-            </span>
-          </Button>
-        </div>
-      </div>
+        {showPreview && (
+          <dialog className="fixed top-0 left-0 flex items-center justify-center w-screen h-screen bg-gray-900 bg-opacity-50">
+            <div className="flex-grow"></div>
+            <div className="flex flex-col m-8 bg-white shadow-lg rounded-md p-4 max-w-max">
+              <div className="flex flex-1 justify-end items-start">
+                <button
+                  type="button"
+                  className="p-2"
+                  onClick={() => setShowPreview(false)}
+                >
+                  <XClose />
+                </button>
+              </div>
+              <div className="flex items-center h-full justify-center">
+                <img
+                  src={objectUrl}
+                  className="w-full h-full max-w-[calc(100vh-6rem)] max-h-[calc(100vh-6rem)]"
+                />
+              </div>
+            </div>
+            <div className="flex-grow"></div>
+          </dialog>
+        )}
+      </>
     );
   }
 
