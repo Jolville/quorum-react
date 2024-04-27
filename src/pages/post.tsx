@@ -2,15 +2,21 @@ import { useMutation, useSuspenseQuery } from "@apollo/client";
 import * as uuid from "uuid";
 import { graphql } from "../gql";
 import { useNavigate, useParams } from "react-router-dom";
-import { Button, ProgressBar, TextArea, Typography } from "../components";
+import {
+  Button,
+  ProgressBar,
+  TextArea,
+  Typography,
+  VotingBox,
+  VotingBoxProps,
+} from "../components";
 import { UseFormRegisterReturn, useFieldArray, useForm } from "react-hook-form";
 import UploadCloud02 from "../icons/upload-cloud-02.svg?react";
 import Eye from "../icons/eye.svg?react";
 import Trash from "../icons/trash.svg?react";
-import XClose from "../icons/x-close.svg?react";
 import { DesignPhase, UpsertPostOptionInput } from "../gql/graphql";
 import clsx from "clsx";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { ToastContext } from "../components";
 import { useAuth } from "../hooks";
 import routes from "../routes";
@@ -19,7 +25,10 @@ const supportedFileTypes = ["image/jpeg", "image/png", "image/gif"];
 
 type PostOptionFormProps = Omit<UpsertPostOptionInput, "position"> & {
   isLoading: boolean;
+  localObjectUrl: string;
 };
+
+const maxPostOptions = 3;
 
 export function Post() {
   const { postId } = useParams();
@@ -31,6 +40,11 @@ export function Post() {
   const { data } = useSuspenseQuery(
     graphql(`
       query PostPage($postId: UUID!) {
+        customer {
+          id
+          firstName
+          lastName
+        }
         post(id: $postId) {
           id
         }
@@ -43,29 +57,40 @@ export function Post() {
     }
   );
 
-  const { register, handleSubmit, formState, control, setValue, watch } =
-    useForm<{
-      designPhase: DesignPhase;
-      content: string;
-      options: PostOptionFormProps[];
-    }>({
-      defaultValues: {
-        options: [
-          {
-            id: uuid.v4(),
-            isLoading: false,
-          },
-          {
-            id: uuid.v4(),
-            isLoading: false,
-          },
-          {
-            id: uuid.v4(),
-            isLoading: false,
-          },
-        ],
-      },
-    });
+  const [previewVotingBoxProps, setPreviewVotingBoxProps] =
+    React.useState<VotingBoxProps | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState,
+    control,
+    setValue,
+    watch,
+    getValues,
+  } = useForm<{
+    designPhase: DesignPhase;
+    content: string;
+    options: PostOptionFormProps[];
+    closesAt?: Date;
+  }>({
+    defaultValues: {
+      options: [
+        {
+          id: uuid.v4(),
+          isLoading: false,
+        },
+        {
+          id: uuid.v4(),
+          isLoading: false,
+        },
+        {
+          id: uuid.v4(),
+          isLoading: false,
+        },
+      ],
+    },
+  });
 
   const optionsFieldArray = useFieldArray({
     control,
@@ -77,29 +102,25 @@ export function Post() {
     0
   );
 
-  console.log(
-    numberOfOptionsAdded,
-    optionsFieldArray.fields.length,
-    watch().options
-  );
-
-  useEffect(() => {
+  React.useEffect(() => {
     if (optionsFieldArray.fields.length < 3) {
       optionsFieldArray.append({
         id: uuid.v4(),
         isLoading: false,
         fileKey: "",
         bucketName: "",
+        localObjectUrl: "",
       });
     } else if (
       numberOfOptionsAdded === optionsFieldArray.fields.length &&
-      optionsFieldArray.fields.length < 6
+      optionsFieldArray.fields.length < maxPostOptions
     ) {
       optionsFieldArray.append({
         id: uuid.v4(),
         isLoading: false,
         fileKey: "",
         bucketName: "",
+        localObjectUrl: "",
       });
     }
   }, [
@@ -119,119 +140,168 @@ export function Post() {
 
   if (!data.post) {
     return (
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="mt-2 md:mt-4 bg-white m-4 p-4 md:p-8 md:max-w-3xl ml-auto mr-auto shadow-lg rounded-lg flex flex-col gap-2"
-      >
-        <Typography
-          size="s"
-          element="h"
-          style="bold"
-          className="text-gray-800 mb-2"
+      <>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className={clsx(
+            previewVotingBoxProps && "hidden",
+            "mt-2 md:mt-4 bg-white m-4 p-4 md:p-8 md:max-w-3xl ml-auto mr-auto shadow-lg rounded-lg flex flex-col gap-2"
+          )}
         >
-          New post
-        </Typography>
-        <div className="flex flex-col space-2">
           <Typography
-            size="xl"
-            element="p"
+            size="s"
+            element="h"
             style="bold"
             className="text-gray-800 mb-2"
           >
-            Design phase
+            New post
           </Typography>
-          <div className="flex flex-col md:flex-row w-full gap-1">
-            <DesignPhaseOption
-              adornmentClassName="bg-gray-200 border border-dashed border-gray-400"
-              heading="Wireframe"
-              description="No colours, more conceptual only"
-              value="WIREFRAME"
-              register={register("designPhase", { required: true })}
-            />
-            <DesignPhaseOption
-              adornmentClassName="bg-primary-100"
-              heading="Lo-fi"
-              description="Looks closer to UI with style starting to show"
-              value="LO_FI"
-              register={register("designPhase", { required: true })}
-            />
-            <DesignPhaseOption
-              adornmentClassName="hifi-block"
-              heading="Hi-fi"
-              description="Polished designs almost ready for handover"
-              value="HI_FI"
-              register={register("designPhase", { required: true })}
+          <div className="flex flex-col space-2">
+            <Typography
+              size="xl"
+              element="p"
+              style="bold"
+              className="text-gray-800 mb-2"
+            >
+              Design phase
+            </Typography>
+            <div className="flex flex-col md:flex-row w-full gap-1">
+              <DesignPhaseOption
+                adornmentClassName="bg-gray-200 border border-dashed border-gray-400"
+                heading="Wireframe"
+                description="No colours, more conceptual only"
+                value="WIREFRAME"
+                register={register("designPhase", { required: true })}
+              />
+              <DesignPhaseOption
+                adornmentClassName="bg-primary-100"
+                heading="Lo-fi"
+                description="Looks closer to UI with style starting to show"
+                value="LO_FI"
+                register={register("designPhase", { required: true })}
+              />
+              <DesignPhaseOption
+                adornmentClassName="hifi-block"
+                heading="Hi-fi"
+                description="Polished designs almost ready for handover"
+                value="HI_FI"
+                register={register("designPhase", { required: true })}
+              />
+            </div>
+            <Typography
+              size="s"
+              element="p"
+              className={clsx(
+                "text-error-500",
+                !formState.errors.designPhase && "invisible"
+              )}
+              ariaHidden={!formState.errors.designPhase}
+            >
+              Design phase is required
+            </Typography>
+          </div>
+          <div className="flex flex-col space-2">
+            <Typography
+              size="xl"
+              element="p"
+              style="bold"
+              className="text-gray-800 mb-2"
+            >
+              Context
+            </Typography>
+            <TextArea
+              {...register("content", {
+                required: "Content is required",
+              })}
+              error={formState.errors["content"]}
+              placeholder="Text goes here"
+              rows={5}
+              showCharacterCount
+              maxLength={350}
             />
           </div>
           <Typography
-            size="s"
-            element="p"
-            className={clsx(
-              "text-error-500",
-              !formState.errors.designPhase && "invisible"
-            )}
-            ariaHidden={!formState.errors.designPhase}
-          >
-            Design phase is required
-          </Typography>
-        </div>
-        <div className="flex flex-col space-2">
-          <Typography
             size="xl"
             element="p"
             style="bold"
             className="text-gray-800 mb-2"
           >
-            Context
+            Designs
           </Typography>
-          <TextArea
-            {...register("content", {
-              required: "Content is required",
-            })}
-            error={formState.errors["content"]}
-            placeholder="Text goes here"
-            rows={5}
-            showCharacterCount
-            maxLength={350}
-          />
-        </div>
-        <Typography
-          size="xl"
-          element="p"
-          style="bold"
-          className="text-gray-800 mb-2"
-        >
-          Designs
-        </Typography>
-        <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
-          {optionsFieldArray.fields.map((field, i) => (
-            <DesignOption
-              id={field.id}
-              setValue={(
-                props:
-                  | { isLoading: true }
-                  | { isLoading: false; fileKey: string; bucketName: string }
-              ) => {
-                if (!props.isLoading) {
-                  setValue(`options.${i}.isLoading`, false);
-                  setValue(`options.${i}.fileKey`, props.fileKey);
-                  setValue(`options.${i}.bucketName`, props.bucketName);
-                } else {
-                  setValue(`options.${i}.isLoading`, true);
-                }
-              }}
-              index={i}
-              key={field.id}
-              onRemove={() => optionsFieldArray.remove(i)}
-            />
-          ))}
-        </div>
-        <div className="flex flex-row">
-          <Button size="m" disabled={!formState.errors} type="submit">
-            Post
-          </Button>
-        </div>
-      </form>
+          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
+            {optionsFieldArray.fields.map((field, i) => (
+              <DesignOption
+                id={field.id}
+                setValue={(
+                  props:
+                    | { isLoading: true; localObjectUrl: string }
+                    | {
+                        isLoading: false;
+                        fileKey: string;
+                        bucketName: string;
+                        localObjectUrl: string;
+                      }
+                ) => {
+                  setValue(`options.${i}.isLoading`, props.isLoading);
+                  setValue(`options.${i}.localObjectUrl`, props.localObjectUrl);
+                  if (!props.isLoading) {
+                    setValue(`options.${i}.isLoading`, false);
+                    setValue(`options.${i}.fileKey`, props.fileKey);
+                    setValue(`options.${i}.bucketName`, props.bucketName);
+                  }
+                }}
+                index={i}
+                key={field.id}
+                onRemove={() => optionsFieldArray.remove(i)}
+                onPreview={() => {
+                  setPreviewVotingBoxProps({
+                    post: {
+                      activeOptionIndex: i,
+                      options: getValues().options.map((o) => ({
+                        id: o.id,
+                        url: o.localObjectUrl,
+                      })),
+                      designPhase: getValues().designPhase,
+                      content: getValues().content || "Content goes here.",
+                      setActiveOptionIndex(newIndex) {
+                        setPreviewVotingBoxProps((curr) => {
+                          if (!curr) {
+                            return null;
+                          }
+                          return {
+                            ...curr,
+                            post: {
+                              ...curr.post,
+                              activeOptionIndex: newIndex,
+                            },
+                          };
+                        });
+                      },
+                      author: {
+                        firstName: data?.customer?.firstName ?? "",
+                        lastName: data?.customer?.lastName ?? "",
+                      },
+                      opensAt: new Date(),
+                    },
+                  });
+                }}
+              />
+            ))}
+          </div>
+          <div className="flex flex-row">
+            <Button size="m" disabled={!formState.errors} type="submit">
+              Post
+            </Button>
+          </div>
+        </form>
+        {previewVotingBoxProps && (
+          <div className="h-screen w-screen fixed top-0 left-0 z-10 bg-black">
+            <div className="p-10 h-full w-full">
+              <VotingBox {...previewVotingBoxProps} />
+            </div>
+          </div>
+        )}
+      </>
     );
   }
 
@@ -287,11 +357,17 @@ function DesignOption(props: {
   id: string;
   setValue: (
     props:
-      | { isLoading: true }
-      | { isLoading: false; fileKey: string; bucketName: string }
+      | { isLoading: true; localObjectUrl: string }
+      | {
+          isLoading: false;
+          fileKey: string;
+          bucketName: string;
+          localObjectUrl: string;
+        }
   ) => void;
   index: number;
   onRemove: () => void;
+  onPreview: () => void;
 }) {
   const [objectUrl, setObjectUrl] = React.useState<string | null>(null);
   const [file, setFile] = React.useState<File | null>(null);
@@ -322,9 +398,10 @@ function DesignOption(props: {
   React.useEffect(() => {
     if (file) {
       // TODO throw if too big
-      setObjectUrl(URL.createObjectURL(file));
+      const localObjectUrl = URL.createObjectURL(file);
+      setObjectUrl(localObjectUrl);
       setFileUploading(true);
-      props.setValue({ isLoading: true });
+      props.setValue({ isLoading: true, localObjectUrl: localObjectUrl });
       setFileUploadProgress(0);
       generateSignedUrl({
         variables: {
@@ -371,6 +448,7 @@ function DesignOption(props: {
                   isLoading: false,
                   fileKey: resp.data.generateSignedPostOptionUrl.fileKey,
                   bucketName: resp.data.generateSignedPostOptionUrl.bucketName,
+                  localObjectUrl,
                 });
               },
               false
@@ -397,9 +475,7 @@ function DesignOption(props: {
     }
   }, [file]);
 
-  const [showPreview, setShowPreview] = useState(false);
-
-  useEffect(() => {
+  React.useEffect(() => {
     () => {
       if (objectUrl) {
         URL.revokeObjectURL(objectUrl);
@@ -439,7 +515,7 @@ function DesignOption(props: {
               size="s"
               className="w-full font-bold"
               type="button"
-              onClick={() => setShowPreview(true)}
+              onClick={props.onPreview}
             >
               <span className="flex flex-row items-center justify-center space-x-1">
                 <Eye />
@@ -460,29 +536,6 @@ function DesignOption(props: {
             </Button>
           </div>
         </div>
-        {showPreview && (
-          <dialog className="fixed top-0 left-0 flex items-center justify-center w-screen h-screen bg-gray-900 bg-opacity-50">
-            <div className="flex-grow"></div>
-            <div className="flex flex-col m-8 bg-white shadow-lg rounded-md p-4 max-w-max">
-              <div className="flex flex-1 justify-end items-start">
-                <button
-                  type="button"
-                  className="p-2"
-                  onClick={() => setShowPreview(false)}
-                >
-                  <XClose />
-                </button>
-              </div>
-              <div className="flex items-center h-full justify-center">
-                <img
-                  src={objectUrl}
-                  className="w-full h-full max-w-[calc(100vh-6rem)] max-h-[calc(100vh-6rem)]"
-                />
-              </div>
-            </div>
-            <div className="flex-grow"></div>
-          </dialog>
-        )}
       </>
     );
   }

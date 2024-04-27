@@ -5,3 +5,5 @@ export * from "./button";
 export * from "./text-area";
 export * from "./toast";
 export * from "./progress-bar";
+export * from "./modal";
+export * from "./voting-box";
