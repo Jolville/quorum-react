@@ -4,6 +4,7 @@ import { useMutation, useSuspenseQuery } from "@apollo/client";
 import { graphql } from "../gql";
 import { redirect } from "react-router-dom";
 import { useState } from "react";
+import clsx from "clsx";
 
 const selectOptions: Array<{ value: string; label: string }> = [
   {
@@ -190,20 +191,33 @@ export function Welcome() {
               <Typography size="l" element="p" style="bold">
                 What best describes your profession?
               </Typography>
-              <Controller
-                control={control}
-                name="profession"
-                render={(renderProps) => (
-                  <Select
-                    options={selectOptions}
-                    value={selectOptions.find(
-                      (c) => c.value === renderProps.field.value
-                    )}
-                    onChange={(val) => renderProps.field.onChange(val?.value)}
-                  />
-                )}
-                rules={{ required: true }}
-              />
+              <div className="flex flex-col space-y-1">
+                <Controller
+                  control={control}
+                  name="profession"
+                  render={(renderProps) => (
+                    <Select
+                      options={selectOptions}
+                      value={selectOptions.find(
+                        (c) => c.value === renderProps.field.value
+                      )}
+                      onChange={(val) => renderProps.field.onChange(val?.value)}
+                    />
+                  )}
+                  rules={{ required: true }}
+                />
+                <Typography
+                  size="s"
+                  element="p"
+                  className={clsx(
+                    "text-error-500",
+                    !formState.errors.profession && "invisible"
+                  )}
+                  ariaHidden={!formState.errors.profession}
+                >
+                  Profession is required
+                </Typography>
+              </div>
               <Button
                 className="ml-auto mt-4"
                 size="l"

@@ -2,7 +2,11 @@ import clsx from "clsx";
 
 export function Button(
   props: JSX.IntrinsicElements["button"] & {
-    variant?: "primary" | "gray" | "secondary" | "destructive-secondary";
+    variant?:
+      | "primary"
+      | "secondary"
+      | "secondary-gray"
+      | "destructive-secondary";
     size?: "s" | "m" | "l" | "xl" | "2xl";
     isLoading?: boolean;
   }
@@ -23,21 +27,22 @@ export function Button(
       className={clsx(
         props.className,
         "rounded-md",
-        variant === "primary" && "text-white bg-primary-500 shadow-xs",
+        variant === "primary" && "text-white bg-primary-500 shadow-sm",
         variant === "primary" &&
           !props.isLoading &&
           " hover:bg-primary-700 focus:shadow-focus-ring-primary disabled:bg-gray-100 disabled:border disabled:border-gray-200 disabled:text-gray-400",
-        variant === "gray" && "text-gray-700 bg-white shadow-xs",
-        variant === "gray" &&
+        variant === "secondary-gray" &&
+          "text-gray-700 bg-white shadow-sm border border-gray-300",
+        variant === "secondary-gray" &&
           !props.isLoading &&
-          "hover:bg-gray-300 focus:focus-ring-gray-shadow disabled:bg-white disabled:border disabled:border-gray-200 disabled:text-gray-400",
+          "hover:bg-gray-50 focus:focus-ring-gray-shadow disabled:bg-white disabled:border disabled:border-gray-200 disabled:text-gray-400",
         variant === "secondary" &&
-          "text-primary-700 bg-primary-50 border border-primary-300 shadow-xs",
+          "text-primary-700 bg-primary-50 border border-primary-300 shadow-sm",
         variant === "secondary" &&
           !props.isLoading &&
           "hover:bg-primary-100 focus:focus-ring-gray-shadow disabled:bg-white disabled:border disabled:border-gray-200 disabled:text-gray-400",
         variant === "destructive-secondary" &&
-          "text-error-700 bg-white border border-error-300 shadow-xs",
+          "text-error-700 bg-white border border-error-300 shadow-sm",
         variant === "destructive-secondary" &&
           !props.isLoading &&
           "hover:bg-error-50 focus:focus-ring-error disabled:bg-white disabled:border disabled:border-gray-200 disabled:text-gray-400",
@@ -59,7 +64,7 @@ export function Button(
               className={clsx(
                 "h-2 w-2 rounded-full animate-bounce [animation-delay:-0.3s] mr-1",
                 variant === "primary" && "bg-white",
-                variant === "gray" && "bg-primary-700",
+                variant === "secondary-gray" && "bg-primary-700",
                 variant === "secondary" && "text-primary-700"
               )}
             ></div>
@@ -67,7 +72,7 @@ export function Button(
               className={clsx(
                 "h-2 w-2 rounded-full animate-bounce [animation-delay:-0.15s] mr-1",
                 variant === "primary" && "bg-white",
-                variant === "gray" && "bg-primary-700",
+                variant === "secondary-gray" && "bg-primary-700",
                 variant === "secondary" && "text-primary-700"
               )}
             ></div>
@@ -75,7 +80,7 @@ export function Button(
               className={clsx(
                 "h-2 w-2 rounded-full animate-bounce",
                 variant === "primary" && "bg-white",
-                variant === "gray" && "bg-primary-700",
+                variant === "secondary-gray" && "bg-primary-700",
                 variant === "secondary" && "text-primary-700"
               )}
             ></div>
