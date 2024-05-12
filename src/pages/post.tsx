@@ -1,6 +1,6 @@
-import { useMutation, useSuspenseQuery } from "@apollo/client";
+import { useApolloClient, useMutation, useSuspenseQuery } from "@apollo/client";
 import * as uuid from "uuid";
-import { graphql } from "../gql";
+import { graphql, useFragment } from "../gql";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Button,
@@ -23,10 +23,11 @@ import Trash from "../icons/trash.svg?react";
 import {
   DesignPhase,
   PostCategory,
+  UpsertPostInput,
   UpsertPostOptionInput,
 } from "../gql/graphql";
 import clsx from "clsx";
-import { addHours } from "date-fns";
+import { addHours, addSeconds } from "date-fns";
 import React from "react";
 import { ToastContext } from "../components";
 import { useAuth } from "../hooks";
@@ -60,6 +61,25 @@ const closesInHoursOptions: { label: string; value: number }[] = [
   { label: "24", value: 24 },
 ];
 
+export const postFragment = graphql(`
+  fragment PostPagePost on Post {
+    id
+  }
+`);
+
+const pageQuery = graphql(`
+  query PostPage($postId: UUID!) {
+    customer {
+      id
+      firstName
+      lastName
+    }
+    post(id: $postId) {
+      ...PostPagePost
+    }
+  }
+`);
+
 export function Post() {
   const { postId } = useParams();
   const auth = useAuth();
@@ -67,25 +87,11 @@ export function Post() {
   if (!postId || !uuid.validate(postId)) {
     throw new Error("expected postId to be a uuid");
   }
-  const { data } = useSuspenseQuery(
-    graphql(`
-      query PostPage($postId: UUID!) {
-        customer {
-          id
-          firstName
-          lastName
-        }
-        post(id: $postId) {
-          id
-        }
-      }
-    `),
-    {
-      variables: {
-        postId,
-      },
-    }
-  );
+  const { data } = useSuspenseQuery(pageQuery, {
+    variables: {
+      postId,
+    },
+  });
 
   const [previewVotingBoxProps, setPreviewVotingBoxProps] =
     React.useState<VotingBoxProps | null>(null);
@@ -100,7 +106,7 @@ export function Post() {
     getValues,
   } = useForm<{
     designPhase: DesignPhase;
-    content: string;
+    context: string;
     options: PostOptionFormProps[];
     closesInHours: number;
     category: PostCategory;
@@ -183,12 +189,75 @@ export function Post() {
     }
   }, [data, auth]);
 
-  if (!data.post) {
+  const toastContext = React.useContext(ToastContext);
+  const apolloClient = useApolloClient();
+  const [upsertPost, { loading: upsertPostLoading }] = useMutation(
+    graphql(`
+      mutation UpsertPost($input: UpsertPostInput!) {
+        upsertPost(input: $input) {
+          errors {
+            ... on BaseError {
+              message
+            }
+          }
+          post {
+            ...PostPagePost
+          }
+        }
+      }
+    `),
+    {
+      onCompleted(data) {
+        for (const error of data.upsertPost.errors) {
+          toastContext.addToast({
+            level: "error",
+            title: error.message,
+          });
+        }
+        const newPost = data.upsertPost.post;
+        if (newPost) {
+          apolloClient.writeQuery({
+            query: pageQuery,
+            variables: {
+              postId,
+            },
+            data: {
+              post: newPost,
+            },
+          });
+        }
+      },
+    }
+  );
+
+  const post = useFragment(postFragment, data.post);
+
+  if (!post) {
     return (
       <>
         <form
-          onSubmit={handleSubmit((data) => {
-            console.log("submitting", data);
+          onSubmit={handleSubmit((formData) => {
+            const input: UpsertPostInput = {
+              category: formData.category,
+              closesAt: addSeconds(
+                new Date(),
+                formData.closesInHours * 60 * 60
+              ).toISOString(),
+              context: formData.context,
+              designPhase: formData.designPhase,
+              id: postId,
+              options: formData.options
+                .filter((o) => o.fileKey)
+                .map((o, i) => ({
+                  id: o.id,
+                  position: i + 1,
+                  bucketName: o.bucketName,
+                  fileKey: o.fileKey,
+                })),
+            };
+            upsertPost({
+              variables: { input },
+            });
           })}
           className={clsx(
             previewVotingBoxProps && "hidden",
@@ -257,10 +326,10 @@ export function Post() {
               Context
             </Typography>
             <TextArea
-              {...register("content", {
-                required: "Content is required",
+              {...register("context", {
+                required: "Context is required",
               })}
-              error={formState.errors["content"]}
+              error={formState.errors["context"]}
               placeholder="Text goes here"
               rows={5}
               showCharacterCount
@@ -323,7 +392,7 @@ export function Post() {
                           url: o.localObjectUrl,
                         })),
                         designPhase: getValues().designPhase,
-                        content: getValues().content || "Content goes here.",
+                        context: getValues().context || "Content goes here.",
                         author: {
                           firstName: data?.customer?.firstName ?? "",
                           lastName: data?.customer?.lastName ?? "",
@@ -465,13 +534,14 @@ export function Post() {
           </div>
           <div className="flex flex-row mt-4 justify-between w-full">
             <div className="flex flex-row space-x-2">
-              <Button size="m" type="submit">
+              <Button size="m" type="submit" isLoading={upsertPostLoading}>
                 Post
               </Button>
               <Button
                 size="m"
                 variant="secondary-gray"
                 type="button"
+                disabled={upsertPostLoading}
                 onClick={() => navigate(routes.root)}
               >
                 Cancel
@@ -481,6 +551,7 @@ export function Post() {
               size="m"
               variant="secondary-gray"
               type="button"
+              disabled={upsertPostLoading}
               onClick={() => {
                 setPreviewVotingBoxProps({
                   post: {
@@ -489,7 +560,7 @@ export function Post() {
                       url: o.localObjectUrl,
                     })),
                     designPhase: getValues().designPhase,
-                    content: getValues().content || "Content goes here.",
+                    context: getValues().context || "Content goes here.",
                     author: {
                       firstName: data?.customer?.firstName ?? "",
                       lastName: data?.customer?.lastName ?? "",
@@ -538,7 +609,7 @@ export function Post() {
 
   return (
     <p className="font-normal">
-      {postId}: {data.post?.id}
+      {postId}: {post.id}
     </p>
   );
 }
@@ -578,6 +649,7 @@ function DesignPhaseOption(props: {
         id={props.value}
         type="radio"
         className="hidden"
+        value={props.value}
         {...props.register}
       />
     </label>
@@ -692,8 +764,7 @@ function DesignOption(props: {
             reader.readAsBinaryString(file);
           }
         })
-        .catch((e) => {
-          console.log(e);
+        .catch(() => {
           toastContext.addToast({
             level: "error",
             title: "There was an error uploading your file",

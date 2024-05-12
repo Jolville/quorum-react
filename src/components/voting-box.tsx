@@ -12,7 +12,7 @@ export type VotingBoxProps = {
   post: {
     options: Array<{ id: string; url: string }>;
     designPhase?: DesignPhase;
-    content?: string;
+    context?: string;
     opensAt?: Date;
     closesAt?: Date;
     author: {
@@ -44,7 +44,7 @@ export function VotingBox(props: VotingBoxProps) {
             <PostedMinutesAgo opensAt={props.post.opensAt} />
           </div>
           <Typography element="p" size="m" className="text-gray-900">
-            {props.post.content}
+            {props.post.context}
           </Typography>
         </div>
         <div className="bg-gray-100 border border-gray-300 p-4 rounded-lg flex flex-col space-y-3">

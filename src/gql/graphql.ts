@@ -109,6 +109,7 @@ export type Mutation = {
   generateSignedPostOptionUrl: GenerateSignedPostOptionUrlPayload;
   getLoginLink: GetLoginLinkPayload;
   signUp: SignUpPayload;
+  submitVote: SubmitVotePayload;
   upsertPost: UpsertPostPayload;
   verifyCustomerToken: VerifyCustomerTokenPayload;
 };
@@ -129,6 +130,11 @@ export type MutationSignUpArgs = {
 };
 
 
+export type MutationSubmitVoteArgs = {
+  input: SubmitVoteInput;
+};
+
+
 export type MutationUpsertPostArgs = {
   input: UpsertPostInput;
 };
@@ -140,6 +146,12 @@ export type MutationVerifyCustomerTokenArgs = {
 
 export type OpensAtAlreadyPassedError = BaseError & {
   __typename?: 'OpensAtAlreadyPassedError';
+  message: Scalars['String']['output'];
+  path?: Maybe<Array<Scalars['String']['output']>>;
+};
+
+export type OptionNotFoundError = BaseError & {
+  __typename?: 'OptionNotFoundError';
   message: Scalars['String']['output'];
   path?: Maybe<Array<Scalars['String']['output']>>;
 };
@@ -215,6 +227,19 @@ export type SignUpPayload = {
   errors: Array<SignUpError>;
 };
 
+export type SubmitVoteError = OptionNotFoundError | UnauthenticatedError;
+
+export type SubmitVoteInput = {
+  optionId: Scalars['UUID']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type SubmitVotePayload = {
+  __typename?: 'SubmitVotePayload';
+  errors: Array<SubmitVoteError>;
+  post?: Maybe<Post>;
+};
+
 export type TooFewOptionsError = BaseError & {
   __typename?: 'TooFewOptionsError';
   message: Scalars['String']['output'];
@@ -277,12 +302,27 @@ export type VerifyCustomerTokenPayload = {
   newToken?: Maybe<Scalars['ID']['output']>;
 };
 
+export type PostPagePostFragment = { __typename?: 'Post', id: string } & { ' $fragmentName'?: 'PostPagePostFragment' };
+
 export type PostPageQueryVariables = Exact<{
   postId: Scalars['UUID']['input'];
 }>;
 
 
-export type PostPageQuery = { __typename?: 'Query', customer?: { __typename?: 'Customer', id: string, firstName?: string | null, lastName?: string | null } | null, post?: { __typename?: 'Post', id: string } | null };
+export type PostPageQuery = { __typename?: 'Query', customer?: { __typename?: 'Customer', id: string, firstName?: string | null, lastName?: string | null } | null, post?: (
+    { __typename?: 'Post' }
+    & { ' $fragmentRefs'?: { 'PostPagePostFragment': PostPagePostFragment } }
+  ) | null };
+
+export type UpsertPostMutationVariables = Exact<{
+  input: UpsertPostInput;
+}>;
+
+
+export type UpsertPostMutation = { __typename?: 'Mutation', upsertPost: { __typename?: 'UpsertPostPayload', errors: Array<{ __typename?: 'ClosesAtNotAfterOpensAtError', message: string } | { __typename?: 'ErrPostNotOwned', message: string } | { __typename?: 'OpensAtAlreadyPassedError', message: string } | { __typename?: 'TooFewOptionsError', message: string } | { __typename?: 'TooManyOptionsError', message: string } | { __typename?: 'UnauthenticatedError', message: string } | { __typename?: 'UnsupportedFileTypeError', message: string }>, post?: (
+      { __typename?: 'Post' }
+      & { ' $fragmentRefs'?: { 'PostPagePostFragment': PostPagePostFragment } }
+    ) | null } };
 
 export type GenerateSignedPostOptionUrlMutationVariables = Exact<{
   input: GenerateSignedPostOptionUrInput;
@@ -315,8 +355,9 @@ export type SignUpMutationVariables = Exact<{
 
 export type SignUpMutation = { __typename?: 'Mutation', signUp: { __typename?: 'SignUpPayload', errors: Array<{ __typename?: 'InvalidEmailError', message: string } | { __typename?: 'InvalidReturnToError', message: string }> } };
 
-
-export const PostPageDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PostPage"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"postId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"customer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firstName"}},{"kind":"Field","name":{"kind":"Name","value":"lastName"}}]}},{"kind":"Field","name":{"kind":"Name","value":"post"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"postId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<PostPageQuery, PostPageQueryVariables>;
+export const PostPagePostFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PostPagePost"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Post"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]} as unknown as DocumentNode<PostPagePostFragment, unknown>;
+export const PostPageDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PostPage"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"postId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"customer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firstName"}},{"kind":"Field","name":{"kind":"Name","value":"lastName"}}]}},{"kind":"Field","name":{"kind":"Name","value":"post"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"postId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"PostPagePost"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PostPagePost"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Post"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]} as unknown as DocumentNode<PostPageQuery, PostPageQueryVariables>;
+export const UpsertPostDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpsertPost"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpsertPostInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"upsertPost"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"BaseError"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"post"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"PostPagePost"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PostPagePost"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Post"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]} as unknown as DocumentNode<UpsertPostMutation, UpsertPostMutationVariables>;
 export const GenerateSignedPostOptionUrlDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"GenerateSignedPostOptionUrl"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GenerateSignedPostOptionUrInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"generateSignedPostOptionUrl"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"bucketName"}},{"kind":"Field","name":{"kind":"Name","value":"fileKey"}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"BaseError"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]}}]} as unknown as DocumentNode<GenerateSignedPostOptionUrlMutation, GenerateSignedPostOptionUrlMutationVariables>;
 export const ProfilePageDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ProfilePage"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"customer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firstName"}}]}}]}}]} as unknown as DocumentNode<ProfilePageQuery, ProfilePageQueryVariables>;
 export const VerifyCustomerTokenDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"VerifyCustomerToken"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"VerifyCustomerTokenInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"verifyCustomerToken"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"customer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"newToken"}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"BaseError"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]}}]} as unknown as DocumentNode<VerifyCustomerTokenMutation, VerifyCustomerTokenMutationVariables>;
