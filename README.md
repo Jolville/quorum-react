@@ -5,6 +5,7 @@ Uses vite as build system. Uses react/typescript/gql/tailwind. Deployed to netli
 ## Quickstart
 
 ```
+echo "VITE_API_URL=http://localhost:8080/query" > .env
 yarn install
 yarn dev
 ```
